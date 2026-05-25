@@ -50,6 +50,21 @@ export const GameView: React.FC<GameViewProps> = ({
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isClashing, setIsClashing] = useState(false);
   const [clashActors, setClashActors] = useState<{ challenger: Player; victim: Player } | null>(null);
+  const [showMyEmote, setShowMyEmote] = useState(false);
+
+  // Show my own emote when updated
+  useEffect(() => {
+    if (myPlayer?.current_emote && myPlayer?.emote_at) {
+      const emoteTime = new Date(myPlayer.emote_at).getTime();
+      const now = new Date().getTime();
+      if (now - emoteTime < 3000) {
+        setShowMyEmote(true);
+        const timer = setTimeout(() => setShowMyEmote(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+    setShowMyEmote(false);
+  }, [myPlayer?.current_emote, myPlayer?.emote_at]);
 
   // Game Engine & Bot Logic Hooks (Host only)
   useBotLogic(room, players, myPlayer, actions, allCards);

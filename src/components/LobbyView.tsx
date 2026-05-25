@@ -12,6 +12,7 @@ interface LobbyViewProps {
   room: Room;
   players: Player[];
   myPlayer: Player | null;
+  onLeaveRoom: () => void;
 }
 
 export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer }) => {

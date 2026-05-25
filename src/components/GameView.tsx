@@ -126,14 +126,14 @@ export const GameView: React.FC<GameViewProps> = ({
       <div className="scanline" />
       
       {/* Header Info */}
-      <div className="flex items-center justify-between p-4 z-20">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center">
-            <span className="text-xl font-black text-purple-400">C</span>
+      <div className="flex items-center justify-between p-3 sm:p-4 z-20">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center">
+            <span className="text-lg sm:text-xl font-black text-purple-400">C</span>
           </div>
           <div>
-            <h1 className="text-sm font-black text-white tracking-widest uppercase">Protocolo // Golpe</h1>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Sincronização Neural: Ativa</p>
+            <h1 className="text-xs sm:text-sm font-black text-white tracking-widest uppercase">Protocolo // Golpe</h1>
+            <p className="text-[8px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-widest">Sincronização Neural: Ativa</p>
           </div>
         </div>
         

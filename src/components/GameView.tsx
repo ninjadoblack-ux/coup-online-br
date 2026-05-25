@@ -210,6 +210,8 @@ export const GameView: React.FC<GameViewProps> = ({
       console.error(err);
       toast.error("Erro ao reagir.");
     }
+  }, [pendingAction, myPlayer, room.id, players]);
+
   const handleSendEmote = useCallback(async (emote: string) => {
     if (!myPlayer) return;
     try {

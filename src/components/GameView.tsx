@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Player, Room, PlayerCard, GameAction, GameLog } from "@/types/game";
 import { GameCard } from "./GameCard";
@@ -18,6 +18,7 @@ interface GameViewProps {
   myCards: PlayerCard[];
   actions: GameAction[];
   logs: GameLog[];
+  onLeaveRoom: () => void;
 }
 
 export const GameView: React.FC<GameViewProps> = ({ 
@@ -26,13 +27,30 @@ export const GameView: React.FC<GameViewProps> = ({
   myPlayer, 
   myCards, 
   actions, 
-  logs 
+  logs,
+  onLeaveRoom
 }) => {
   const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   
   const opponents = players.filter(p => p.id !== myPlayer?.id && p.status === 'alive');
   const isMyTurn = room.current_turn_player_id === myPlayer?.id;
   const pendingAction = actions.length > 0 ? actions[0] : null;
+
+  useEffect(() => {
+    if (pendingAction?.expires_at) {
+      const interval = setInterval(() => {
+        const expires = new Date(pendingAction.expires_at!).getTime();
+        const now = new Date().getTime();
+        const diff = Math.max(0, Math.floor((expires - now) / 1000));
+        setTimeLeft(diff);
+        if (diff <= 0) clearInterval(interval);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setTimeLeft(null);
+    }
+  }, [pendingAction?.expires_at]);
 
   const handleAction = async (actionType: string, targetId: string | null = null) => {
     if (!myPlayer || !isMyTurn) return;
@@ -92,6 +110,14 @@ export const GameView: React.FC<GameViewProps> = ({
 
   return (
     <div className="relative w-full h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="absolute top-4 right-4 z-20 text-slate-500 hover:text-red-400"
+        onClick={onLeaveRoom}
+      >
+        SAIR
+      </Button>
       {/* Top Bar - Opponents */}
       <div className="flex justify-center gap-4 p-4">
         {players.filter(p => p.id !== myPlayer?.id).map(opponent => (
@@ -163,7 +189,7 @@ export const GameView: React.FC<GameViewProps> = ({
                 <span className="text-red-500 font-black uppercase tracking-widest text-sm flex items-center gap-2">
                   <Timer className="w-4 h-4 animate-pulse" /> REAÇÃO NECESSÁRIA
                 </span>
-                <span className="text-slate-500 font-mono">10s</span>
+                <span className="text-slate-500 font-mono">{timeLeft}s</span>
               </div>
               
               <h3 className="text-xl font-bold text-center mb-2 text-slate-100">

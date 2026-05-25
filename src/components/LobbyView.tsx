@@ -128,7 +128,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
       
       <div className="text-center space-y-4 w-full">
-        <h2 className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-black">Room Interface // Protocol Activated</h2>
+        <h2 className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-black">Interface de Sala // Protocolo Ativado</h2>
         <div 
           className="relative inline-flex items-center gap-6 bg-slate-950/80 border-2 border-slate-800 px-12 py-6 rounded-[2.5rem] cursor-pointer hover:border-purple-500/50 transition-all group overflow-hidden shadow-2xl"
           onClick={copyCode}
@@ -150,7 +150,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
         <div className="absolute top-0 right-0 p-4">
            <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-800">
              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Network Live</span>
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rede Ativa</span>
            </div>
         </div>
 

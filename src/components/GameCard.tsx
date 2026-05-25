@@ -3,6 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CardType } from "@/types/game";
+import { CARD_LABELS } from "@/lib/game-logic";
 
 interface GameCardProps {
   type?: CardType;
@@ -30,13 +31,8 @@ const cardColors: Record<CardType, string> = {
   Contessa: "border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.4)]",
 };
 
-const cardNames: Record<CardType, string> = {
-  Duke: "Duque",
-  Assassin: "Assassino",
-  Ambassador: "Embaixador",
-  Captain: "Capitão",
-  Contessa: "Condessa",
-};
+// ... keep existing code
+
 
 export const GameCard: React.FC<GameCardProps> = ({
   type,
@@ -75,7 +71,7 @@ export const GameCard: React.FC<GameCardProps> = ({
           </div>
         </div>
         <div className="absolute bottom-2 inset-x-0 flex justify-center opacity-30 z-10">
-           <span className="text-[6px] font-black uppercase tracking-[0.4em] text-white">Neural Protocol Active</span>
+           <span className="text-[6px] font-black uppercase tracking-[0.4em] text-white">Protocolo Neural Ativo</span>
         </div>
       </motion.div>
     );
@@ -114,7 +110,7 @@ export const GameCard: React.FC<GameCardProps> = ({
           "text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white drop-shadow-lg", 
           compact && "text-[8px] tracking-widest pt-2"
         )}>
-          {type ? cardNames[type] : ""}
+          {type ? CARD_LABELS[type] : ""}
         </span>
         <div className="w-8 h-[1px] bg-white/40" />
       </div>
@@ -124,7 +120,7 @@ export const GameCard: React.FC<GameCardProps> = ({
            <div className="h-[1px] flex-1 bg-white/20" />
            <div className="px-2 py-0.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-sm">
               <span className={cn("text-[8px] font-black text-white uppercase tracking-tighter", compact && "hidden")}>
-                Active Unit
+                Unidade Ativa
               </span>
            </div>
            <div className="h-[1px] flex-1 bg-white/20" />

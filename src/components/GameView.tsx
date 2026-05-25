@@ -322,15 +322,20 @@ export const GameView: React.FC<GameViewProps> = ({
              </div>
              <div className="grid grid-cols-2 xs:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-3">
               <TooltipProvider delayDuration={300}>
-                {Object.keys(ACTION_DESCRIPTIONS).map((action) => (
-                  <ActionBtn 
-                    key={action}
-                    action={action}
-                    disabled={!isMyTurn || pendingAction !== null || ((myPlayer?.coins ?? 0) >= 10 && action !== 'Coup')}
-                    isMyTurn={isMyTurn}
-                    onClick={() => handleAction(action)}
-                  />
-                ))}
+                {Object.keys(ACTION_DESCRIPTIONS).map((action) => {
+                  const requiredCard = ACTION_REQUIRED_CARDS[action];
+                  const hasCard = !requiredCard || myCards.some(c => c.card_type === requiredCard && !c.is_revealed);
+                  
+                  return (
+                    <ActionBtn 
+                      key={action}
+                      action={action}
+                      disabled={!isMyTurn || pendingAction !== null || !hasCard || ((myPlayer?.coins ?? 0) >= 10 && action !== 'Coup')}
+                      isMyTurn={isMyTurn}
+                      onClick={() => handleAction(action)}
+                    />
+                  );
+                })}
               </TooltipProvider>
             </div>
           </div>

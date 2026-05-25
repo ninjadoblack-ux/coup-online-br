@@ -1,26 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/")({
-  component: Index,
-});
+import { createFileRoute } from '@tanstack/react-router'
+import { GameContainer } from '@/components/GameContainer'
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+export const Route = createFileRoute('/')({
+  component: () => (
+    <div className="min-h-screen bg-[#0a0a0c] text-white selection:bg-purple-500/30">
+      <GameContainer />
     </div>
-  );
-}
-
-function Index() {
-  return <PlaceholderIndex />;
-}
+  ),
+})

@@ -94,11 +94,17 @@ export function useBotLogic(
       if (['Assassinate', 'Steal', 'Coup'].includes(actionType)) {
         const potentialTargets = players.filter(p => p.id !== bot.id && p.status === 'alive');
         if (potentialTargets.length > 0) {
-          targetId = potentialTargets[Math.floor(Math.random() * potentialTargets.length)].id;
+          if (difficulty === 'hard') {
+            // Target the player with most coins
+            targetId = [...potentialTargets].sort((a, b) => b.coins - a.coins)[0].id;
+          } else {
+            targetId = potentialTargets[Math.floor(Math.random() * potentialTargets.length)].id;
+          }
         } else {
           actionType = 'Income'; // Fallback
         }
       }
+
 
       await supabase.from('game_actions').insert([{
         room_id: room!.id,

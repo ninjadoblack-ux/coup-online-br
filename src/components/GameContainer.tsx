@@ -18,7 +18,7 @@ export const GameContainer: React.FC = () => {
   });
   const [session, setSession] = useState<any | undefined>(undefined);
   const [authChecked, setAuthChecked] = useState(false);
-  const { room, players, myPlayer, myCards, actions, logs, loading } = useGameState(roomId);
+  const { room, players, myPlayer, myCards, allCards, actions, logs, loading } = useGameState(roomId);
 
   useEffect(() => {
     if (roomId) {
@@ -78,6 +78,7 @@ export const GameContainer: React.FC = () => {
           players={players} 
           myPlayer={myPlayer} 
           myCards={myCards} 
+          allCards={allCards}
           actions={actions} 
           logs={logs} 
           onLeaveRoom={handleLeaveRoom}

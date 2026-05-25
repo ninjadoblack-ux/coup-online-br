@@ -9,6 +9,7 @@ export function useGameState(roomId: string | null) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [myPlayer, setMyPlayer] = useState<Player | null>(null);
   const [myCards, setMyCards] = useState<PlayerCard[]>([]);
+  const [allCards, setAllCards] = useState<PlayerCard[]>([]);
   const [actions, setActions] = useState<GameAction[]>([]);
   const [logs, setLogs] = useState<GameLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,13 +42,17 @@ export function useGameState(roomId: string | null) {
             setMyPlayer(currentMe);
             // Fetch my cards and logs/actions in parallel
             const [cardsRes, logsRes, actionsRes] = await Promise.all([
-              supabase.from('player_cards').select('*').eq('player_id', currentMe.id),
+              supabase.from('player_cards').select('*').in('player_id', typedPlayers.map(p => p.id)),
               supabase.from('game_logs').select('*').eq('room_id', roomId).order('created_at', { ascending: false }).limit(20),
               supabase.from('game_actions').select('*').eq('room_id', roomId).eq('status', 'pending')
             ]);
             
             if (!mounted) return;
-            if (cardsRes.data) setMyCards(cardsRes.data as PlayerCard[]);
+            if (cardsRes.data) {
+              const typedCards = cardsRes.data as PlayerCard[];
+              setAllCards(typedCards);
+              setMyCards(typedCards.filter(c => c.player_id === currentMe.id));
+            }
             if (logsRes.data) setLogs(logsRes.data as GameLog[]);
             if (actionsRes.data) setActions(actionsRes.data as GameAction[]);
           }
@@ -83,15 +88,21 @@ export function useGameState(roomId: string | null) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'player_cards' }, 
         payload => {
           if (!mounted) return;
-          // We can't filter by player_id in real-time easily for everyone, so we do it here
-          // But we only care if it's OUR card update
           const card = (payload.new || payload.old) as PlayerCard;
-          if (myPlayer?.id && card.player_id === myPlayer.id) {
-            if (payload.eventType === 'INSERT') {
+          
+          if (payload.eventType === 'INSERT') {
+            setAllCards(prev => [...prev, payload.new as PlayerCard]);
+            if (myPlayer?.id && card.player_id === myPlayer.id) {
               setMyCards(prev => [...prev, payload.new as PlayerCard]);
-            } else if (payload.eventType === 'UPDATE') {
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            setAllCards(prev => prev.map(c => c.id === payload.new.id ? (payload.new as PlayerCard) : c));
+            if (myPlayer?.id && card.player_id === myPlayer.id) {
               setMyCards(prev => prev.map(c => c.id === payload.new.id ? (payload.new as PlayerCard) : c));
-            } else if (payload.eventType === 'DELETE') {
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setAllCards(prev => prev.filter(c => c.id !== payload.old.id));
+            if (myPlayer?.id && card.player_id === myPlayer.id) {
               setMyCards(prev => prev.filter(c => c.id !== payload.old.id));
             }
           }
@@ -122,5 +133,5 @@ export function useGameState(roomId: string | null) {
     };
   }, [roomId, myPlayer?.id]); // myPlayer.id is stable enough once set
 
-  return { room, players, myPlayer, myCards, actions, logs, loading };
+  return { room, players, myPlayer, myCards, allCards, actions, logs, loading };
 }

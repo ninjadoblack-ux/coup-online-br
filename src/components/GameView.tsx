@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Coins, History, Timer } from "lucide-react";
 import coinGold from "@/assets/coin-gold.png";
 import coinSilver from "@/assets/coin-silver.png";
-import { ACTION_DESCRIPTIONS, ACTION_LABELS } from "@/lib/game-logic";
+import { ACTION_DESCRIPTIONS, ACTION_LABELS, ACTION_REQUIRED_CARDS, CARD_LABELS } from "@/lib/game-logic";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ interface GameViewProps {
   players: Player[];
   myPlayer: Player | null;
   myCards: PlayerCard[];
+  allCards: PlayerCard[];
   actions: GameAction[];
   logs: GameLog[];
   onLeaveRoom: () => void;
@@ -37,7 +38,9 @@ export const GameView: React.FC<GameViewProps> = ({
   players, 
   myPlayer, 
   myCards, 
+  allCards,
   actions, 
+
   logs,
   onLeaveRoom
 }) => {
@@ -45,7 +48,7 @@ export const GameView: React.FC<GameViewProps> = ({
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   // Game Engine & Bot Logic Hooks (Host only)
-  useBotLogic(room, players, myPlayer, actions);
+  useBotLogic(room, players, myPlayer, actions, allCards);
   useGameLogic(room, players, myPlayer, actions);
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
@@ -322,15 +325,21 @@ export const GameView: React.FC<GameViewProps> = ({
              </div>
              <div className="grid grid-cols-2 xs:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-3">
               <TooltipProvider delayDuration={300}>
-                {Object.keys(ACTION_DESCRIPTIONS).map((action) => (
-                  <ActionBtn 
-                    key={action}
-                    action={action}
-                    disabled={!isMyTurn || pendingAction !== null || ((myPlayer?.coins ?? 0) >= 10 && action !== 'Coup')}
-                    isMyTurn={isMyTurn}
-                    onClick={() => handleAction(action)}
-                  />
-                ))}
+                {Object.keys(ACTION_DESCRIPTIONS).map((action) => {
+                  const requiredCard = ACTION_REQUIRED_CARDS[action];
+                  const hasCard = !requiredCard || myCards.some(c => c.card_type === requiredCard && !c.is_revealed);
+                  
+                  return (
+                    <ActionBtn 
+                      key={action}
+                      action={action}
+                      disabled={!isMyTurn || pendingAction !== null || !hasCard || ((myPlayer?.coins ?? 0) >= 10 && action !== 'Coup')}
+                      hasCard={hasCard}
+                      isMyTurn={isMyTurn}
+                      onClick={() => handleAction(action)}
+                    />
+                  );
+                })}
               </TooltipProvider>
             </div>
           </div>
@@ -392,7 +401,7 @@ const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelec
   );
 });
 
-const ActionBtn = memo(({ action, disabled, isMyTurn, onClick }: any) => {
+const ActionBtn = memo(({ action, disabled, hasCard, isMyTurn, onClick }: any) => {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -412,8 +421,16 @@ const ActionBtn = memo(({ action, disabled, isMyTurn, onClick }: any) => {
       </TooltipTrigger>
       <TooltipContent className="bg-slate-900 border-slate-800 text-white p-3 max-w-xs rounded-xl shadow-2xl">
         <div className="space-y-1">
-          <p className="font-black text-xs uppercase tracking-widest text-purple-400">{ACTION_LABELS[action] || action}</p>
+          <div className="flex items-center justify-between">
+            <p className="font-black text-xs uppercase tracking-widest text-purple-400">{ACTION_LABELS[action] || action}</p>
+            {!hasCard && (
+              <span className="text-[8px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded font-black border border-red-500/30 uppercase">Carta Ausente</span>
+            )}
+          </div>
           <p className="text-[10px] leading-relaxed text-slate-300 font-medium">{ACTION_DESCRIPTIONS[action]}</p>
+          {!hasCard && (
+            <p className="text-[9px] text-red-400 font-bold uppercase mt-2">Você precisa da carta de {CARD_LABELS[ACTION_REQUIRED_CARDS[action]!] || ACTION_REQUIRED_CARDS[action]} para esta ação.</p>
+          )}
         </div>
       </TooltipContent>
     </Tooltip>

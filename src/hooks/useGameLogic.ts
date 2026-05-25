@@ -18,19 +18,20 @@ export function useGameLogic(
     const pendingAction = actions.length > 0 ? actions[0] : null;
 
     if (pendingAction && pendingAction.status === 'pending') {
-      const interval = setInterval(() => {
-        const expiresAt = pendingAction.expires_at ? new Date(pendingAction.expires_at).getTime() : 0;
-        const now = Date.now();
+      const expiresAt = pendingAction.expires_at ? new Date(pendingAction.expires_at).getTime() : 0;
+      const now = Date.now();
+      const diff = expiresAt - now;
 
-        if (now >= expiresAt && expiresAt > 0) {
-          if (processingRef.current !== pendingAction.id) {
-            resolveAction(pendingAction);
-          }
+      // Use a precise timeout instead of an interval to avoid racing
+      const timeout = setTimeout(() => {
+        if (processingRef.current !== pendingAction.id) {
+          resolveAction(pendingAction);
         }
-      }, 1000);
-      return () => clearInterval(interval);
+      }, Math.max(0, diff));
+
+      return () => clearTimeout(timeout);
     }
-  }, [room?.status, actions.length, isHost, players]);
+  }, [room?.status, actions[0]?.id, isHost]); // Only re-run when status or current pending action changes
 
   const resolveAction = async (action: GameAction) => {
     if (processingRef.current === action.id) return;

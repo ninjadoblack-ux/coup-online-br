@@ -18,6 +18,7 @@ interface GameViewProps {
   myCards: PlayerCard[];
   actions: GameAction[];
   logs: GameLog[];
+  onLeaveRoom: () => void;
 }
 
 export const GameView: React.FC<GameViewProps> = ({ 

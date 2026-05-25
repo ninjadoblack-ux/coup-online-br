@@ -150,54 +150,13 @@ export const GameView: React.FC<GameViewProps> = ({
       {/* Opponents Layout */}
       <div className="flex justify-center gap-3 sm:gap-6 px-4 py-2 overflow-x-auto no-scrollbar">
         {players.filter(p => p.id !== myPlayer?.id).map(opponent => (
-          <motion.div 
-            key={opponent.id} 
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            onClick={() => isSelectingTarget && handleAction(isSelectingTarget, opponent.id)}
-            className={cn(
-              "flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] bg-slate-900/40 backdrop-blur-md border transition-all relative group min-w-[120px] sm:min-w-0",
-              room.current_turn_player_id === opponent.id ? "border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.2)]" : "border-slate-800",
-              opponent.status === 'dead' && "grayscale opacity-30",
-              isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
-            )}
-          >
-            {room.current_turn_player_id === opponent.id && (
-               <div className="absolute -top-1 -left-1 -right-1 -bottom-1 border border-purple-500 rounded-[1.6rem] sm:rounded-[2.1rem] animate-pulse pointer-events-none" />
-            )}
-
-            <div className="flex items-center gap-2">
-              <div className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner",
-                opponent.is_bot ? "bg-gradient-to-br from-purple-500 to-purple-800" : "bg-gradient-to-br from-slate-700 to-slate-900"
-              )}>
-                {opponent.is_bot ? <Bot className="w-5 h-5 text-white" /> : opponent.name[0].toUpperCase()}
-              </div>
-              <div className="flex flex-col">
-                <span className={cn(
-                  "text-xs font-black uppercase tracking-tighter",
-                  opponent.is_bot ? "text-purple-300" : "text-slate-100"
-                )}>{opponent.name}</span>
-                <div className="flex items-center gap-1 text-slate-300 text-[10px] font-black">
-                  <img src={coinSilver} alt="moedas" className="w-3.5 h-3.5 drop-shadow" /> {opponent.coins}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-1 mt-1">
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="w-6 h-9 bg-slate-800 rounded-md border border-slate-700 flex items-center justify-center">
-                  <div className="w-3 h-3 border border-slate-600 rotate-45 opacity-20" />
-                </div>
-              ))}
-            </div>
-
-            {room.current_turn_player_id === opponent.id && opponent.is_bot && (
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="text-[9px] text-purple-400 font-black animate-pulse uppercase tracking-[0.2em]">Processando...</span>
-              </div>
-            )}
-          </motion.div>
+          <OpponentCard 
+            key={opponent.id}
+            opponent={opponent}
+            currentTurnId={room.current_turn_player_id}
+            isSelectingTarget={!!isSelectingTarget}
+            onSelect={() => isSelectingTarget && handleAction(isSelectingTarget, opponent.id)}
+          />
         ))}
       </div>
 

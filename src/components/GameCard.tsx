@@ -31,6 +31,14 @@ const cardColors: Record<CardType, string> = {
   Contessa: "border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.4)]",
 };
 
+const cardNames: Record<CardType, string> = {
+  Duke: "Duque",
+  Assassin: "Assassino",
+  Ambassador: "Embaixador",
+  Captain: "Capitão",
+  Contessa: "Condessa",
+};
+
 export const GameCard: React.FC<GameCardProps> = ({
   type,
   isRevealed = false,
@@ -105,7 +113,7 @@ export const GameCard: React.FC<GameCardProps> = ({
           "text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white drop-shadow-lg", 
           compact && "text-[8px] tracking-widest pt-2"
         )}>
-          {type}
+          {type ? cardNames[type] : ""}
         </span>
         <div className="w-8 h-[1px] bg-white/40" />
       </div>

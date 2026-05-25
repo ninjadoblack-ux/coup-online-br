@@ -18,11 +18,7 @@ export function useGameLogic(
   useEffect(() => {
     if (!room || !isHost || room.status !== 'playing' || !currentAction) return;
 
-    // Immediate resolution for allowed / blocked / challenged
-    if (currentAction.status === 'allowed') {
-      resolveAction(currentAction, 'execute');
-      return;
-    }
+    // Immediate resolution for blocked / challenged
     if (currentAction.status === 'blocked') {
       resolveAction(currentAction, 'block');
       return;

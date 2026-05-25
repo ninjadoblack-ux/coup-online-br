@@ -179,7 +179,7 @@ export const GameView: React.FC<GameViewProps> = ({
                 <span className="text-red-500 font-black uppercase tracking-widest text-sm flex items-center gap-2">
                   <Timer className="w-4 h-4 animate-pulse" /> REAÇÃO NECESSÁRIA
                 </span>
-                <span className="text-slate-500 font-mono">10s</span>
+                <span className="text-slate-500 font-mono">{timeLeft}s</span>
               </div>
               
               <h3 className="text-xl font-bold text-center mb-2 text-slate-100">

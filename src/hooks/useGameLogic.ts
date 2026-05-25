@@ -110,7 +110,8 @@ export function useGameLogic(
   };
 
   const updateCoins = async (playerId: string, coins: number) => {
-    await supabase.from('players').update({ coins: Math.max(0, coins) }).eq('id', playerId);
+    const { error } = await supabase.from('players').update({ coins: Math.max(0, coins) }).eq('id', playerId);
+    if (error) console.error("Error updating coins:", error);
   };
 
   const loseCard = async (playerId: string) => {

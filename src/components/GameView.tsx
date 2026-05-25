@@ -94,12 +94,17 @@ export const GameView: React.FC<GameViewProps> = ({
     <div className="relative w-full h-[calc(100vh-80px)] overflow-hidden flex flex-col">
       {/* Top Bar - Opponents */}
       <div className="flex justify-center gap-4 p-4">
-        {opponents.map(opponent => (
-          <div key={opponent.id} className={cn(
-            "flex flex-col items-center gap-2 p-3 rounded-2xl bg-slate-900/80 border border-slate-800 transition-all",
-            room.current_turn_player_id === opponent.id && "border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)] scale-110",
-            opponent.status === 'dead' && "grayscale opacity-50"
-          )}>
+        {players.filter(p => p.id !== myPlayer?.id).map(opponent => (
+          <div 
+            key={opponent.id} 
+            onClick={() => isSelectingTarget && handleAction(isSelectingTarget, opponent.id)}
+            className={cn(
+              "flex flex-col items-center gap-2 p-3 rounded-2xl bg-slate-900/80 border border-slate-800 transition-all",
+              room.current_turn_player_id === opponent.id && "border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)] scale-110",
+              opponent.status === 'dead' && "grayscale opacity-50",
+              isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 animate-pulse hover:scale-110"
+            )}
+          >
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xs">
                 {opponent.name[0].toUpperCase()}

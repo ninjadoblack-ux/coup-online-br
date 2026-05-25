@@ -539,7 +539,7 @@ export const GameView: React.FC<GameViewProps> = ({
                   initial={{ scale: 0, y: 0, opacity: 0 }}
                   animate={{ scale: 1.5, y: -60, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  className="absolute left-0 top-0 z-30 text-4xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+                  className="absolute left-1/2 -translate-x-1/2 top-0 z-30 text-4xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
                 >
                   {myPlayer?.current_emote}
                 </motion.div>

@@ -260,7 +260,7 @@ export const GameView: React.FC<GameViewProps> = ({
             <ScrollArea className="h-full w-full px-6">
               <div className="flex flex-col gap-2">
                 <AnimatePresence>
-                  {logs.slice(-10).map((log) => {
+                  {logs.slice(0, 10).reverse().map((log) => {
                     const isBotMessage = players.some(p => p.is_bot && log.message.startsWith(p.name));
                     return (
                       <motion.div 

@@ -23,37 +23,37 @@ const tutorialSteps: TutorialStep[] = [
   {
     title: "Bem-vindo ao Coup Online",
     content: "Você está prestes a entrar em um mundo de intriga, blefe e traição. Coup é um jogo de dedução onde seu objetivo é ser o último sobrevivente na mesa.",
-    icon: <Users className="w-12 h-12" />,
+    icon: <Users />,
     color: "bg-purple-600"
   },
   {
     title: "Cartas e Influência",
     content: "Cada jogador começa com 2 cartas viradas para baixo. Cada carta representa um personagem com poderes únicos. Se você perder uma influência (carta), deve revelá-la. Perdeu as duas? Você está fora!",
-    icon: <BookOpen className="w-12 h-12" />,
+    icon: <BookOpen />,
     color: "bg-blue-600"
   },
   {
     title: "Ações do Jogo",
     content: "No seu turno, você pode escolher uma ação: Renda (1 moeda), Ajuda Externa (2 moedas) ou Golpe de Estado (7 moedas). O Golpe elimina uma influência de um adversário instantaneamente.",
-    icon: <Coins className="w-12 h-12" />,
+    icon: <Coins />,
     color: "bg-yellow-600"
   },
   {
     title: "Personagens e Poderes",
     content: "Duque: Pega 3 moedas (Taxa). Assassino: Paga 3 moedas para eliminar alguém. Capitão: Rouba 2 moedas. Embaixador: Troca cartas. Condessa: Bloqueia assassinatos.",
-    icon: <Sword className="w-12 h-12" />,
+    icon: <Sword />,
     color: "bg-red-600"
   },
   {
     title: "A Arte do Blefe",
     content: "O segredo? Você pode declarar QUALQUER ação, mesmo sem ter a carta! Mas cuidado: se alguém te contestar e você estiver mentindo, perde uma carta. Se você falar a verdade, quem contestou perde uma!",
-    icon: <Shield className="w-12 h-12" />,
+    icon: <Shield />,
     color: "bg-green-600"
   },
   {
     title: "Bloqueios",
     content: "Algumas ações podem ser bloqueadas por outros personagens. O Duque bloqueia Ajuda Externa. O Capitão ou Embaixador bloqueiam Roubos. A Condessa bloqueia o Assassino.",
-    icon: <Shield className="w-12 h-12" />,
+    icon: <Shield />,
     color: "bg-indigo-600"
   }
 ];
@@ -155,7 +155,7 @@ export const TutorialDialog: React.FC = () => {
               transition={{ type: "spring", duration: 0.5 }}
               className={`p-6 rounded-3xl ${step.color} shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
             >
-              {React.cloneElement(step.icon as React.ReactElement, { className: "w-8 h-8 sm:w-12 sm:h-12" })}
+              {React.cloneElement(step.icon as React.ReactElement<any>, { className: "w-8 h-8 sm:w-12 sm:h-12" })}
             </motion.div>
           </AnimatePresence>
 

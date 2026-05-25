@@ -132,6 +132,7 @@ export const GameView: React.FC<GameViewProps> = ({
             className={cn(
               "flex flex-col items-center gap-2 p-3 rounded-2xl bg-slate-900/80 border border-slate-800 transition-all",
               room.current_turn_player_id === opponent.id && "border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)] scale-110",
+              room.current_turn_player_id === opponent.id && opponent.is_bot && "animate-pulse border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.5)]",
               opponent.status === 'dead' && "grayscale opacity-50",
               isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 animate-pulse hover:scale-110"
             )}

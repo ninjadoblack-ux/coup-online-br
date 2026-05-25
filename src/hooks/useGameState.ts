@@ -44,7 +44,7 @@ export function useGameState(roomId: string | null) {
             const [cardsRes, logsRes, actionsRes] = await Promise.all([
               supabase.from('player_cards').select('*').in('player_id', typedPlayers.map(p => p.id)),
               supabase.from('game_logs').select('*').eq('room_id', roomId).order('created_at', { ascending: false }).limit(20),
-              supabase.from('game_actions').select('*').eq('room_id', roomId).eq('status', 'pending')
+              supabase.from('game_actions').select('*').eq('room_id', roomId).in('status', ['pending', 'challenged', 'blocked', 'allowed'])
             ]);
             
             if (!mounted) return;

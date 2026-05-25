@@ -88,15 +88,21 @@ export function useGameState(roomId: string | null) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'player_cards' }, 
         payload => {
           if (!mounted) return;
-          // We can't filter by player_id in real-time easily for everyone, so we do it here
-          // But we only care if it's OUR card update
           const card = (payload.new || payload.old) as PlayerCard;
-          if (myPlayer?.id && card.player_id === myPlayer.id) {
-            if (payload.eventType === 'INSERT') {
+          
+          if (payload.eventType === 'INSERT') {
+            setAllCards(prev => [...prev, payload.new as PlayerCard]);
+            if (myPlayer?.id && card.player_id === myPlayer.id) {
               setMyCards(prev => [...prev, payload.new as PlayerCard]);
-            } else if (payload.eventType === 'UPDATE') {
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            setAllCards(prev => prev.map(c => c.id === payload.new.id ? (payload.new as PlayerCard) : c));
+            if (myPlayer?.id && card.player_id === myPlayer.id) {
               setMyCards(prev => prev.map(c => c.id === payload.new.id ? (payload.new as PlayerCard) : c));
-            } else if (payload.eventType === 'DELETE') {
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setAllCards(prev => prev.filter(c => c.id !== payload.old.id));
+            if (myPlayer?.id && card.player_id === myPlayer.id) {
               setMyCards(prev => prev.filter(c => c.id !== payload.old.id));
             }
           }

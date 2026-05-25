@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Coins, History, Timer } from "lucide-react";
 import coinGold from "@/assets/coin-gold.png";
 import coinSilver from "@/assets/coin-silver.png";
-import { ACTION_DESCRIPTIONS, ACTION_LABELS } from "@/lib/game-logic";
+import { ACTION_DESCRIPTIONS, ACTION_LABELS, ACTION_REQUIRED_CARDS } from "@/lib/game-logic";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

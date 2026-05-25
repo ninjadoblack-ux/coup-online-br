@@ -107,11 +107,11 @@ export function useGameLogic(
             .eq('player_id', blocker.id)
             .eq('is_revealed', false);
           
-          const hasCard = cards?.some(c => blockableBy.includes(c.card_type));
+          const hasCard = cards?.some(c => blockableBy.includes(c.card_type as any));
 
           if (hasCard) {
             // Blocker was telling the truth: action stays blocked, challenger loses influence
-            const matchedCard = cards!.find(c => blockableBy.includes(c.card_type))!.card_type;
+            const matchedCard = cards!.find(c => blockableBy.includes(c.card_type as any))!.card_type;
             await supabase.from('game_logs').insert([{
               room_id: room!.id,
               message: `${blocker.name} provou ter ${CARD_LABELS[matchedCard]}! O bloqueio permanece.`

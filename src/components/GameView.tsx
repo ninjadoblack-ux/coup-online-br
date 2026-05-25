@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Coins, History, Timer } from "lucide-react";
 import coinGold from "@/assets/coin-gold.png";
 import coinSilver from "@/assets/coin-silver.png";
-import { ACTION_DESCRIPTIONS, ACTION_LABELS, ACTION_REQUIRED_CARDS, CARD_LABELS } from "@/lib/game-logic";
+import { ACTION_DESCRIPTIONS, ACTION_LABELS, ACTION_REQUIRED_CARDS, CARD_LABELS, BLOCKABLE_ACTIONS } from "@/lib/game-logic";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -53,7 +53,7 @@ export const GameView: React.FC<GameViewProps> = ({
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
-  const pendingAction = useMemo(() => actions.find(a => a.status === 'pending') || null, [actions]);
+  const pendingAction = useMemo(() => actions.find(a => ['pending', 'blocking'].includes(a.status)) || null, [actions]);
 
   // Local 10s countdown that starts when the overlay first appears for this action,
   // independent of server-side expires_at drift.
@@ -125,32 +125,58 @@ export const GameView: React.FC<GameViewProps> = ({
 
     try {
       if (type === 'allow') {
-        // Encurta o expires_at para que o host resolva imediatamente
-        await supabase
-          .from('game_actions')
-          .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
-          .eq('id', pendingAction.id);
-        await supabase.from('game_logs').insert([{
-          room_id: room.id,
-          message: `${myPlayer.name} permitiu a ação.`
-        }]);
+        if (pendingAction.status === 'blocking') {
+          // Allowing a block means the action is now permanently blocked
+          await supabase
+            .from('game_actions')
+            .update({ status: 'blocked' })
+            .eq('id', pendingAction.id);
+          await supabase.from('game_logs').insert([{
+            room_id: room.id,
+            message: `${myPlayer.name} permitiu o bloqueio.`
+          }]);
+        } else {
+          // Encurta o expires_at para que o host resolva imediatamente
+          await supabase
+            .from('game_actions')
+            .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
+            .eq('id', pendingAction.id);
+          await supabase.from('game_logs').insert([{
+            room_id: room.id,
+            message: `${myPlayer.name} permitiu a ação.`
+          }]);
+        }
       } else if (type === 'challenge') {
+        const newStatus = pendingAction.status === 'blocking' ? 'block_challenged' : 'challenged';
         await supabase
           .from('game_actions')
-          .update({ status: 'challenged' })
+          .update({ 
+            status: newStatus,
+            challenger_id: myPlayer.id 
+          })
           .eq('id', pendingAction.id);
+        
+        const message = newStatus === 'block_challenged' 
+          ? `${myPlayer.name} CONTESTOU o bloqueio de ${players.find(p => p.id === pendingAction.blocker_id)?.name}!`
+          : `${myPlayer.name} CONTESTOU ${players.find(p => p.id === pendingAction.player_id)?.name}!`;
+
         await supabase.from('game_logs').insert([{
           room_id: room.id,
-          message: `${myPlayer.name} CONTESTOU ${players.find(p => p.id === pendingAction.player_id)?.name}!`
+          message
         }]);
       } else if (type === 'block') {
         await supabase
           .from('game_actions')
-          .update({ status: 'blocked' })
+          .update({ 
+            status: 'blocking',
+            blocker_id: myPlayer.id,
+            expires_at: new Date(Date.now() + 12000).toISOString() // Reset timer for challenge to block
+          })
           .eq('id', pendingAction.id);
+        
         await supabase.from('game_logs').insert([{
           room_id: room.id,
-          message: `${myPlayer.name} BLOQUEOU ${players.find(p => p.id === pendingAction.player_id)?.name}!`
+          message: `${myPlayer.name} anunciou BLOQUEIO contra ${players.find(p => p.id === pendingAction.player_id)?.name}!`
         }]);
       }
     } catch (err) {

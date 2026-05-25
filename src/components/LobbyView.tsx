@@ -1,12 +1,19 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Copy, Play, Users, Bot, X } from "lucide-react";
-import { Player, Room } from "@/types/game";
+import { Copy, Play, Users, Bot, X, Brain } from "lucide-react";
+import { Player, Room, BotDifficulty } from "@/types/game";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { INITIAL_DECK, shuffleDeck } from "@/lib/game-logic";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface LobbyViewProps {
   room: Room;
@@ -16,8 +23,10 @@ interface LobbyViewProps {
 }
 
 export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, onLeaveRoom }) => {
+  const [selectedDifficulty, setSelectedDifficulty] = useState<BotDifficulty>('moderate');
   const isHost = myPlayer?.is_host || false;
   const canStart = players.length >= 2;
+
 
   const copyCode = () => {
     navigator.clipboard.writeText(room.code);
@@ -40,14 +49,16 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
         user_id: null,
         name: nextName,
         is_host: false,
-        is_bot: true
+        is_bot: true,
+        bot_difficulty: selectedDifficulty
       }]);
-      toast.success(`${nextName} adicionado!`);
+      toast.success(`${nextName} (${selectedDifficulty}) adicionado!`);
     } catch (err) {
       console.error(err);
       toast.error("Erro ao adicionar robô.");
     }
   };
+
 
   const handleRemoveBot = async (botId: string) => {
     try {
@@ -150,8 +161,20 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
                   <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Host</span>
                 )}
                 {player.is_bot && (
-                  <span className="text-[10px] uppercase font-bold text-purple-400/70 tracking-wider">IA</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] uppercase font-bold text-purple-400/70 tracking-wider">IA</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">•</span>
+                    <span className={`text-[10px] uppercase font-bold tracking-wider ${
+                      player.bot_difficulty === 'easy' ? 'text-green-400/70' :
+                      player.bot_difficulty === 'moderate' ? 'text-yellow-400/70' :
+                      'text-red-400/70'
+                    }`}>
+                      {player.bot_difficulty === 'easy' ? 'Fácil' :
+                       player.bot_difficulty === 'moderate' ? 'Moderado' : 'Difícil'}
+                    </span>
+                  </div>
                 )}
+
               </div>
               
               {isHost && player.is_bot && (
@@ -192,14 +215,37 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
             </Button>
             
             {players.length < 6 && (
-              <Button
-                variant="outline"
-                className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-950/20 rounded-xl"
-                onClick={handleAddBot}
-              >
-                <Bot className="mr-2 h-4 w-4" /> + ADICIONAR ROBÔ
-              </Button>
+              <div className="flex flex-col gap-2 p-3 bg-slate-900/50 rounded-xl border border-slate-800">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3" /> Nível do Robô
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Select 
+                    value={selectedDifficulty} 
+                    onValueChange={(v) => setSelectedDifficulty(v as BotDifficulty)}
+                  >
+                    <SelectTrigger className="h-10 border-purple-500/20 bg-slate-950 text-xs">
+                      <SelectValue placeholder="Dificuldade" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectItem value="easy">Fácil</SelectItem>
+                      <SelectItem value="moderate">Moderado</SelectItem>
+                      <SelectItem value="hard">Difícil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-10 border-purple-500/30 text-purple-400 hover:bg-purple-950/20 rounded-lg text-xs"
+                    onClick={handleAddBot}
+                  >
+                    <Bot className="mr-2 h-3 w-3" /> ADICIONAR
+                  </Button>
+                </div>
+              </div>
             )}
+
           </div>
         ) : (
           <div className="text-center p-4 bg-slate-900/50 rounded-2xl border border-slate-800 text-slate-400 italic">

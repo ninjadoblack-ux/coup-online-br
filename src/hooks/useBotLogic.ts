@@ -46,32 +46,65 @@ export function useBotLogic(
       const possibleActions = ['Income', 'Foreign Aid', 'Tax', 'Steal', 'Assassinate', 'Exchange', 'Coup'];
       let actionType = 'Income';
 
-      // Simple AI logic
-      if (bot.coins >= 10) {
-        actionType = 'Coup';
-      } else if (bot.coins >= 7 && Math.random() > 0.5) {
-        actionType = 'Coup';
-      } else if (bot.coins >= 3 && Math.random() > 0.7) {
-        actionType = 'Assassinate';
-      } else {
-        const random = Math.random();
-        if (random > 0.8) actionType = 'Tax';
-        else if (random > 0.6) actionType = 'Steal';
-        else if (random > 0.4) actionType = 'Foreign Aid';
-        else if (random > 0.2) actionType = 'Exchange';
-        else actionType = 'Income';
+      const difficulty = bot.bot_difficulty || 'moderate';
+
+      // Difficulty-based decision making
+      if (difficulty === 'easy') {
+        if (bot.coins >= 10) {
+          actionType = 'Coup';
+        } else {
+          const random = Math.random();
+          if (random > 0.9) actionType = 'Tax';
+          else if (random > 0.8) actionType = 'Foreign Aid';
+          else if (random > 0.7) actionType = 'Steal';
+          else actionType = 'Income';
+        }
+      } else if (difficulty === 'moderate') {
+        if (bot.coins >= 10) {
+          actionType = 'Coup';
+        } else if (bot.coins >= 7 && Math.random() > 0.5) {
+          actionType = 'Coup';
+        } else if (bot.coins >= 3 && Math.random() > 0.7) {
+          actionType = 'Assassinate';
+        } else {
+          const random = Math.random();
+          if (random > 0.8) actionType = 'Tax';
+          else if (random > 0.6) actionType = 'Steal';
+          else if (random > 0.4) actionType = 'Foreign Aid';
+          else if (random > 0.2) actionType = 'Exchange';
+          else actionType = 'Income';
+        }
+      } else { // Hard
+        if (bot.coins >= 7) {
+          actionType = 'Coup';
+        } else if (bot.coins >= 3) {
+          // More aggressive assassination
+          actionType = Math.random() > 0.4 ? 'Assassinate' : 'Tax';
+        } else {
+          const random = Math.random();
+          if (random > 0.6) actionType = 'Tax';
+          else if (random > 0.3) actionType = 'Steal';
+          else actionType = 'Foreign Aid';
+        }
       }
+
 
       // Select target if needed
       let targetId: string | null = null;
       if (['Assassinate', 'Steal', 'Coup'].includes(actionType)) {
         const potentialTargets = players.filter(p => p.id !== bot.id && p.status === 'alive');
         if (potentialTargets.length > 0) {
-          targetId = potentialTargets[Math.floor(Math.random() * potentialTargets.length)].id;
+          if (difficulty === 'hard') {
+            // Target the player with most coins
+            targetId = [...potentialTargets].sort((a, b) => b.coins - a.coins)[0].id;
+          } else {
+            targetId = potentialTargets[Math.floor(Math.random() * potentialTargets.length)].id;
+          }
         } else {
           actionType = 'Income'; // Fallback
         }
       }
+
 
       await supabase.from('game_actions').insert([{
         room_id: room!.id,
@@ -105,9 +138,16 @@ export function useBotLogic(
     await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
 
     try {
-      // Simple decision: 10% chance to challenge if it's not a basic action
+      // Difficulty-based reaction
       const isBasic = ['Income', 'Foreign Aid', 'Coup'].includes(action.action_type);
-      const shouldChallenge = !isBasic && Math.random() < 0.15;
+      const difficulty = bot.bot_difficulty || 'moderate';
+      
+      let challengeProb = 0.15; // Moderate default
+      if (difficulty === 'easy') challengeProb = 0.05;
+      if (difficulty === 'hard') challengeProb = 0.30;
+
+      const shouldChallenge = !isBasic && Math.random() < challengeProb;
+
 
       if (shouldChallenge) {
         await supabase

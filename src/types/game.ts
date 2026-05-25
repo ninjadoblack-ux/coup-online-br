@@ -5,6 +5,8 @@ export type RoomStatus = 'waiting' | 'playing' | 'finished';
 
 export type PlayerStatus = 'alive' | 'dead';
 
+export type BotDifficulty = 'easy' | 'moderate' | 'hard';
+
 export type ActionType = 
   | 'Income' 
   | 'Foreign Aid' 
@@ -26,6 +28,7 @@ export interface Player {
   status: PlayerStatus;
   is_host: boolean;
   is_bot?: boolean;
+  bot_difficulty?: BotDifficulty;
   turn_order: number | null;
 }
 

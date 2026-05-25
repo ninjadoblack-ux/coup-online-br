@@ -133,6 +133,7 @@ export type Database = {
       players: {
         Row: {
           avatar: string | null
+          bot_difficulty: string | null
           coins: number | null
           id: string
           is_bot: boolean | null
@@ -146,6 +147,7 @@ export type Database = {
         }
         Insert: {
           avatar?: string | null
+          bot_difficulty?: string | null
           coins?: number | null
           id?: string
           is_bot?: boolean | null
@@ -159,6 +161,7 @@ export type Database = {
         }
         Update: {
           avatar?: string | null
+          bot_difficulty?: string | null
           coins?: number | null
           id?: string
           is_bot?: boolean | null

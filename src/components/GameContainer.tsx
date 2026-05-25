@@ -5,6 +5,7 @@ import { HomeView } from "./HomeView";
 import { LobbyView } from "./LobbyView";
 import { GameView } from "./GameView";
 import { AuthOverlay } from "./AuthOverlay";
+import { TutorialDialog } from "./TutorialDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 

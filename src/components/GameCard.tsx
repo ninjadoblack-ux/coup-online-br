@@ -15,12 +15,12 @@ interface GameCardProps {
   compact?: boolean;
 }
 
-const cardIcons: Record<CardType, React.ReactNode> = {
-  Duke: <Crown className="w-8 h-8 text-purple-400" />,
-  Assassin: <Sword className="w-8 h-8 text-red-400" />,
-  Ambassador: <Shield className="w-8 h-8 text-cyan-400" />,
-  Captain: <Coins className="w-8 h-8 text-yellow-400" />,
-  Contessa: <UserRound className="w-8 h-8 text-pink-400" />,
+const cardImages: Record<CardType, string> = {
+  Duke: "https://i.pinimg.com/1200x/0b/e6/69/0be6699e901ea7686e2823647ff8bb48.jpg",
+  Assassin: "https://i.pinimg.com/1200x/a7/8f/50/a78f500bd983f8de67a1d52de72eb191.jpg",
+  Ambassador: "https://i.pinimg.com/1200x/a9/51/57/a95157c351c8117431dd511e8580e293.jpg",
+  Captain: "https://i.pinimg.com/1200x/23/5e/5b/235e5b19a15a7eea951f7a4bd7fbeadf.jpg",
+  Contessa: "https://i.pinimg.com/736x/68/69/b0/6869b0c7afcd9cb4bfec32c3b8e6aa51.jpg",
 };
 
 const cardColors: Record<CardType, string> = {
@@ -29,6 +29,14 @@ const cardColors: Record<CardType, string> = {
   Ambassador: "border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.4)]",
   Captain: "border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.4)]",
   Contessa: "border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.4)]",
+};
+
+const cardNames: Record<CardType, string> = {
+  Duke: "Duque",
+  Assassin: "Assassino",
+  Ambassador: "Embaixador",
+  Captain: "Capitão",
+  Contessa: "Condessa",
 };
 
 export const GameCard: React.FC<GameCardProps> = ({
@@ -72,7 +80,7 @@ export const GameCard: React.FC<GameCardProps> = ({
     );
   }
 
-  const icon = type ? cardIcons[type] : null;
+  const image = type ? cardImages[type] : null;
   const colorClass = type ? cardColors[type] : "";
 
   return (
@@ -80,35 +88,45 @@ export const GameCard: React.FC<GameCardProps> = ({
       initial={{ rotateY: 90, opacity: 0 }}
       animate={{ rotateY: 0, opacity: 1 }}
       className={cn(
-        "relative w-24 h-36 md:w-32 md:h-48 rounded-[1.5rem] border-2 bg-slate-950 flex flex-col items-center justify-between p-4 transition-all shadow-2xl overflow-hidden",
+        "relative w-24 h-36 md:w-32 md:h-48 rounded-[1.5rem] border-2 bg-slate-950 flex flex-col items-center justify-between transition-all shadow-2xl overflow-hidden group",
         colorClass,
-        compact && "w-16 h-24 md:w-20 md:h-30 p-2 rounded-xl",
+        compact && "w-16 h-24 md:w-20 md:h-30 rounded-xl",
         className
       )}
     >
-      <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+      {/* Background Image */}
+      {image && (
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={image} 
+            alt={type} 
+            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/20" />
+        </div>
+      )}
+
+      <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-10" />
       
-      <div className="flex flex-col items-center gap-1 z-10">
-        <span className={cn("text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white", compact && "text-[8px] tracking-widest")}>
-          {type}
+      <div className="flex flex-col items-center gap-1 z-10 pt-4">
+        <span className={cn(
+          "text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white drop-shadow-lg", 
+          compact && "text-[8px] tracking-widest pt-2"
+        )}>
+          {type ? cardNames[type] : ""}
         </span>
-        <div className="w-8 h-[1px] bg-white/20" />
+        <div className="w-8 h-[1px] bg-white/40" />
       </div>
 
-      <div className={cn("my-2 relative z-10", compact && "my-1 scale-75")}>
-        <div className="absolute inset-0 blur-xl opacity-20 bg-current rounded-full" />
-        {icon}
-      </div>
-
-      <div className="flex flex-col items-center gap-2 z-10 w-full">
-        <div className="w-full flex justify-center items-center gap-1">
-           <div className="h-[1px] flex-1 bg-white/5" />
-           <div className="px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
-              <span className={cn("text-[8px] font-black text-white/40 uppercase tracking-tighter", compact && "hidden")}>
-                Card Data
+      <div className="flex flex-col items-center gap-2 z-10 w-full pb-4">
+        <div className="w-full flex justify-center items-center gap-1 px-4">
+           <div className="h-[1px] flex-1 bg-white/20" />
+           <div className="px-2 py-0.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-sm">
+              <span className={cn("text-[8px] font-black text-white uppercase tracking-tighter", compact && "hidden")}>
+                Active Unit
               </span>
            </div>
-           <div className="h-[1px] flex-1 bg-white/5" />
+           <div className="h-[1px] flex-1 bg-white/20" />
         </div>
       </div>
     </motion.div>

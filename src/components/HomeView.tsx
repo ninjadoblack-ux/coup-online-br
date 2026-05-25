@@ -43,7 +43,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
       await supabase.from('players').insert([{
         room_id: room.id,
         user_id: user.id,
-        name: profile?.display_name || user.email?.split('@')[0] || "Jogador",
+        name: profile?.display_name || user.email?.split('@')[0] || (user.is_anonymous ? "Convidado" : "Jogador"),
         is_host: true
       }]);
 
@@ -100,7 +100,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
         await supabase.from('players').insert([{
           room_id: room.id,
           user_id: user.id,
-          name: profile?.display_name || user.email?.split('@')[0] || "Jogador",
+          name: profile?.display_name || user.email?.split('@')[0] || (user.is_anonymous ? "Convidado" : "Jogador"),
           is_host: false
         }]);
       }

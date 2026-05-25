@@ -6,8 +6,8 @@ import { LobbyView } from "./LobbyView";
 import { GameView } from "./GameView";
 import { AuthOverlay } from "./AuthOverlay";
 import { TutorialDialog } from "./TutorialDialog";
+import { LoadingScreen } from "./LoadingScreen";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 
 export const GameContainer: React.FC = () => {
   const [roomId, setRoomId] = useState<string | null>(() => {
@@ -16,7 +16,8 @@ export const GameContainer: React.FC = () => {
     }
     return null;
   });
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<any | undefined>(undefined);
+  const [authChecked, setAuthChecked] = useState(false);
   const { room, players, myPlayer, myCards, actions, logs, loading } = useGameState(roomId);
 
   useEffect(() => {
@@ -30,10 +31,12 @@ export const GameContainer: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setAuthChecked(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setAuthChecked(true);
     });
 
     return () => subscription.unsubscribe();
@@ -46,6 +49,10 @@ export const GameContainer: React.FC = () => {
     }
   }, [room, roomId, loading]);
 
+  if (!authChecked) {
+    return <LoadingScreen status="Autenticando" subStatus="Verificando Credenciais na Rede..." />;
+  }
+
   if (!session) {
     return <AuthOverlay />;
   }
@@ -55,20 +62,7 @@ export const GameContainer: React.FC = () => {
   };
 
   if (roomId && loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-slate-950 cyber-grid">
-        <div className="relative">
-          <div className="w-20 h-20 border-4 border-slate-900 border-t-purple-600 rounded-full animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center">
-             <div className="w-10 h-10 border-2 border-slate-800 border-b-purple-400 rounded-full animate-[spin_1s_linear_infinite_reverse]" />
-          </div>
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-white font-black tracking-[0.3em] uppercase text-sm">Sincronizando Rede</span>
-          <span className="text-slate-600 font-bold tracking-widest uppercase text-[10px] animate-pulse">Aguardando Resposta do Satélite...</span>
-        </div>
-      </div>
-    );
+    return <LoadingScreen status="Sincronizando" subStatus="Baixando Dados da Partida..." />;
   }
 
   return (

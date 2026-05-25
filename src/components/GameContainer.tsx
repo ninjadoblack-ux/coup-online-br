@@ -31,10 +31,12 @@ export const GameContainer: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      setAuthChecked(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setAuthChecked(true);
     });
 
     return () => subscription.unsubscribe();

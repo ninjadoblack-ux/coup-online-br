@@ -119,7 +119,7 @@ export function useBotLogic(
         target_id: targetId,
         action_type: actionType,
         status: 'pending',
-        expires_at: new Date(Date.now() + 10000).toISOString()
+        expires_at: new Date(Date.now() + (actionType === 'Income' ? 2000 : 10000)).toISOString()
       }]);
 
       await supabase.from('game_logs').insert([{

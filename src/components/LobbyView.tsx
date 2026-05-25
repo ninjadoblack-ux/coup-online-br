@@ -150,7 +150,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
         <div className="absolute top-0 right-0 p-4">
            <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-800">
              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Network Live</span>
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rede Ativa</span>
            </div>
         </div>
 

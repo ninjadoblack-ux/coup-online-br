@@ -6,6 +6,8 @@ import { GameCard } from "./GameCard";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Coins, History, Timer } from "lucide-react";
+import coinGold from "@/assets/coin-gold.png";
+import coinSilver from "@/assets/coin-silver.png";
 import { ACTION_DESCRIPTIONS } from "@/lib/game-logic";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -170,8 +172,8 @@ export const GameView: React.FC<GameViewProps> = ({
                   "text-xs font-black uppercase tracking-tighter",
                   opponent.is_bot ? "text-purple-300" : "text-slate-100"
                 )}>{opponent.name}</span>
-                <div className="flex items-center gap-1 text-yellow-500 text-[10px] font-black">
-                  <Coins className="w-3 h-3" /> {opponent.coins}
+                <div className="flex items-center gap-1 text-slate-300 text-[10px] font-black">
+                  <img src={coinSilver} alt="moedas" className="w-3.5 h-3.5 drop-shadow" /> {opponent.coins}
                 </div>
               </div>
             </div>
@@ -221,9 +223,9 @@ export const GameView: React.FC<GameViewProps> = ({
             </motion.div>
           )}
 
-          <div className="flex flex-col items-center gap-1 z-10 opacity-40">
-             <Coins className="w-12 h-12 text-yellow-500/50" />
-             <span className="text-3xl font-black text-yellow-500 tracking-[0.5em] ml-4">BANCO</span>
+          <div className="flex flex-col items-center gap-1 z-10 opacity-60">
+             <img src={coinGold} alt="banco" className="w-14 h-14 drop-shadow-[0_0_12px_rgba(234,179,8,0.4)]" />
+             <span className="text-3xl font-black text-yellow-500/80 tracking-[0.5em] ml-4">BANCO</span>
           </div>
 
           <div className="w-full max-w-sm h-32 mt-4 z-10">
@@ -319,8 +321,8 @@ export const GameView: React.FC<GameViewProps> = ({
           <div className="flex items-center gap-8">
             <div className="flex flex-col items-center gap-2">
                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-700 p-[2px] shadow-lg">
-                  <div className="w-full h-full bg-slate-900 rounded-[14px] flex flex-col items-center justify-center">
-                    <Coins className="w-5 h-5 text-yellow-500" />
+                  <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center gap-1.5">
+                    <img src={coinGold} alt="moedas" className="w-6 h-6 drop-shadow-[0_0_6px_rgba(234,179,8,0.5)]" />
                     <span className="text-xl font-black text-white">{myPlayer?.coins || 0}</span>
                   </div>
                </div>

@@ -80,7 +80,11 @@ export function useGameState(roomId: string | null) {
           if (payload.eventType === 'INSERT') {
             setPlayers(prev => [...prev, payload.new as Player]);
           } else if (payload.eventType === 'UPDATE') {
-            setPlayers(prev => prev.map(p => p.id === payload.new.id ? (payload.new as Player) : p));
+            const updatedPlayer = payload.new as Player;
+            setPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
+            if (updatedPlayer.user_id && myPlayer && updatedPlayer.id === myPlayer.id) {
+              setMyPlayer(updatedPlayer);
+            }
           } else if (payload.eventType === 'DELETE') {
             setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
           }

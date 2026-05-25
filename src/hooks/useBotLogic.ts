@@ -44,9 +44,26 @@ export function useBotLogic(
     }
   }, [room?.current_turn_player_id, actions[0]?.id, isHost]); // Only run when turn changes or pending action changes
 
+  const sendBotEmote = async (botId: string, emote: string) => {
+    try {
+      await supabase.from('players').update({ 
+        current_emote: emote, 
+        emote_at: new Date().toISOString() 
+      }).eq('id', botId);
+    } catch (err) {
+      console.error('Error sending bot emote:', err);
+    }
+  };
+
   const handleBotTurn = async (bot: Player) => {
     thinkingRef.current[bot.id] = true;
     
+    // Bots occasionally emote at the start of their turn
+    if (Math.random() > 0.7) {
+      const emotes = ["🤔", "😈", "🔥", "🤫"];
+      sendBotEmote(bot.id, emotes[Math.floor(Math.random() * emotes.length)]);
+    }
+
     // 2 second "thinking" delay as requested
     await new Promise(resolve => setTimeout(resolve, 3000));
 
@@ -159,6 +176,12 @@ export function useBotLogic(
     // Bots take some time to "decide"
     await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 3000));
 
+    // Bots occasionally emote when they are targeted or reacting
+    if (Math.random() > 0.6) {
+      const emotes = ["👁️", "💧", "🤡", "🤫"];
+      sendBotEmote(bot.id, emotes[Math.floor(Math.random() * emotes.length)]);
+    }
+
     try {
       // Re-fetch action to see if it was already resolved
       const { data: currentAction } = await supabase.from('game_actions').select('status').eq('id', action.id).single();
@@ -179,9 +202,10 @@ export function useBotLogic(
         const finalChallengeProb = isTarget ? challengeProb * 1.5 : challengeProb;
         const finalBlockProb = isTarget ? blockProb * 2 : blockProb;
 
-        if (Math.random() < finalChallengeProb) {
-          await supabase.from('game_actions').update({ 
-            status: 'challenged',
+          if (Math.random() < finalChallengeProb) {
+            sendBotEmote(bot.id, "😈");
+            await supabase.from('game_actions').update({ 
+              status: 'challenged',
             challenger_id: bot.id 
           }).eq('id', action.id);
           
@@ -189,9 +213,10 @@ export function useBotLogic(
             room_id: room!.id,
             message: `${bot.name} CONTESTOU ${players.find(p => p.id === action.player_id)?.name}!`
           }]);
-        } else if (canBlock && Math.random() < finalBlockProb) {
-          await supabase.from('game_actions').update({ 
-            status: 'blocking',
+          } else if (canBlock && Math.random() < finalBlockProb) {
+            sendBotEmote(bot.id, "🤫");
+            await supabase.from('game_actions').update({ 
+              status: 'blocking',
             blocker_id: bot.id,
             expires_at: new Date(Date.now() + 12000).toISOString()
           }).eq('id', action.id);

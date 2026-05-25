@@ -22,6 +22,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+const EMOTES = ["👁️", "💧", "😈", "🤡", "🤔", "🤫", "🔥", "🤝"];
+
 interface GameViewProps {
   room: Room;
   players: Player[];
@@ -48,6 +50,21 @@ export const GameView: React.FC<GameViewProps> = ({
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isClashing, setIsClashing] = useState(false);
   const [clashActors, setClashActors] = useState<{ challenger: Player; victim: Player } | null>(null);
+  const [showMyEmote, setShowMyEmote] = useState(false);
+
+  // Show my own emote when updated
+  useEffect(() => {
+    if (myPlayer?.current_emote && myPlayer?.emote_at) {
+      const emoteTime = new Date(myPlayer.emote_at).getTime();
+      const now = new Date().getTime();
+      if (now - emoteTime < 3000) {
+        setShowMyEmote(true);
+        const timer = setTimeout(() => setShowMyEmote(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+    setShowMyEmote(false);
+  }, [myPlayer?.current_emote, myPlayer?.emote_at]);
 
   // Game Engine & Bot Logic Hooks (Host only)
   useBotLogic(room, players, myPlayer, actions, allCards);
@@ -211,6 +228,21 @@ export const GameView: React.FC<GameViewProps> = ({
       toast.error("Erro ao reagir.");
     }
   }, [pendingAction, myPlayer, room.id, players]);
+
+  const handleSendEmote = useCallback(async (emote: string) => {
+    if (!myPlayer) return;
+    try {
+      await supabase
+        .from('players')
+        .update({ 
+          current_emote: emote, 
+          emote_at: new Date().toISOString() 
+        })
+        .eq('id', myPlayer.id);
+    } catch (err) {
+      console.error("Error sending emote:", err);
+    }
+  }, [myPlayer]);
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-slate-950 cyber-grid">
@@ -484,10 +516,36 @@ export const GameView: React.FC<GameViewProps> = ({
       </AnimatePresence>
 
       {/* Bottom Interface - Player Panel */}
-      <div className="bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 p-3 sm:p-6 z-20">
+      <div className="bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 p-3 sm:p-6 z-20 relative">
+        {/* Emote Picker */}
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2 bg-slate-950/90 backdrop-blur-xl p-2 rounded-2xl border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.2)] z-30 ring-1 ring-white/10">
+          {EMOTES.map(emote => (
+            <button 
+              key={emote}
+              onClick={() => handleSendEmote(emote)}
+              className="text-xl sm:text-2xl hover:scale-125 transition-all active:scale-90 px-1 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+            >
+              {emote}
+            </button>
+          ))}
+        </div>
+
         <div className="max-w-5xl mx-auto flex flex-col xl:flex-row items-center gap-4 sm:gap-10">
           
-          <div className="flex items-center gap-4 sm:gap-8">
+          <div className="flex items-center gap-4 sm:gap-8 relative">
+            <AnimatePresence>
+              {showMyEmote && (
+                <motion.div
+                  initial={{ scale: 0, y: 0, opacity: 0 }}
+                  animate={{ scale: 1.5, y: -60, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="absolute left-1/2 -translate-x-1/2 top-0 z-30 text-4xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+                >
+                  {myPlayer?.current_emote}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="flex flex-col items-center gap-1.5">
                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-700 p-[2px] shadow-lg">
                   <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center gap-1 sm:gap-1.5">
@@ -554,6 +612,21 @@ export const GameView: React.FC<GameViewProps> = ({
 };
 
 const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelect }: any) => {
+  const [showEmote, setShowEmote] = useState(false);
+
+  useEffect(() => {
+    if (opponent.current_emote && opponent.emote_at) {
+      const emoteTime = new Date(opponent.emote_at).getTime();
+      const now = new Date().getTime();
+      if (now - emoteTime < 3000) {
+        setShowEmote(true);
+        const timer = setTimeout(() => setShowEmote(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+    setShowEmote(false);
+  }, [opponent.current_emote, opponent.emote_at]);
+
   return (
     <motion.div 
       initial={{ y: -20, opacity: 0 }}
@@ -566,6 +639,19 @@ const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelec
         isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
       )}
     >
+      <AnimatePresence>
+        {showEmote && (
+          <motion.div
+            initial={{ scale: 0, y: 10, opacity: 0 }}
+            animate={{ scale: 1.5, y: -60, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute left-1/2 -translate-x-1/2 top-0 z-30 text-3xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+          >
+            {opponent.current_emote}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {currentTurnId === opponent.id && (
          <div className="absolute -top-1 -left-1 -right-1 -bottom-1 border border-purple-500 rounded-[1.6rem] sm:rounded-[2.1rem] animate-pulse pointer-events-none" />
       )}

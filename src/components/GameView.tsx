@@ -10,6 +10,8 @@ import { ACTION_DESCRIPTIONS } from "@/lib/game-logic";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useBotLogic } from "@/hooks/useBotLogic";
+import { Bot } from "lucide-react";
 
 interface GameViewProps {
   room: Room;
@@ -32,6 +34,9 @@ export const GameView: React.FC<GameViewProps> = ({
 }) => {
   const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  // Bot Logic Hook
+  useBotLogic(room, players, myPlayer, actions);
   
   const opponents = players.filter(p => p.id !== myPlayer?.id && p.status === 'alive');
   const isMyTurn = room.current_turn_player_id === myPlayer?.id;
@@ -127,16 +132,32 @@ export const GameView: React.FC<GameViewProps> = ({
             className={cn(
               "flex flex-col items-center gap-2 p-3 rounded-2xl bg-slate-900/80 border border-slate-800 transition-all",
               room.current_turn_player_id === opponent.id && "border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)] scale-110",
+              room.current_turn_player_id === opponent.id && opponent.is_bot && "animate-pulse border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.5)]",
               opponent.status === 'dead' && "grayscale opacity-50",
               isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 animate-pulse hover:scale-110"
             )}
           >
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xs">
-                {opponent.name[0].toUpperCase()}
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs",
+                opponent.is_bot ? "bg-purple-600" : "bg-slate-700"
+              )}>
+                {opponent.is_bot ? <Bot className="w-4 h-4 text-white" /> : opponent.name[0].toUpperCase()}
               </div>
-              <span className="text-xs font-bold text-slate-300">{opponent.name}</span>
+              <span className={cn(
+                "text-xs font-bold",
+                opponent.is_bot ? "text-purple-300" : "text-slate-300"
+              )}>{opponent.name}</span>
             </div>
+            {room.current_turn_player_id === opponent.id && opponent.is_bot && (
+              <motion.span 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-[10px] text-purple-400 font-black animate-pulse uppercase"
+              >
+                Pensando...
+              </motion.span>
+            )}
             <div className="flex gap-1">
               {/* Back of cards */}
               <GameCard compact className="scale-75" />
@@ -165,11 +186,20 @@ export const GameView: React.FC<GameViewProps> = ({
 
           <ScrollArea className="h-32 w-full max-w-xs p-2">
             <div className="flex flex-col gap-1 text-center">
-              {logs.map(log => (
-                <div key={log.id} className="text-[10px] text-slate-400 font-mono">
-                  {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} - {log.message}
-                </div>
-              ))}
+              {logs.map(log => {
+                const isBotMessage = players.some(p => p.is_bot && log.message.startsWith(p.name));
+                return (
+                  <div 
+                    key={log.id} 
+                    className={cn(
+                      "text-[10px] font-mono",
+                      isBotMessage ? "text-purple-400 font-bold" : "text-slate-400"
+                    )}
+                  >
+                    {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} - {log.message}
+                  </div>
+                );
+              })}
             </div>
           </ScrollArea>
         </div>

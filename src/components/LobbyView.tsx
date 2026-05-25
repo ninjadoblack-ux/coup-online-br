@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Copy, Play, Users } from "lucide-react";
+import { Copy, Play, Users, Bot, X } from "lucide-react";
 import { Player, Room } from "@/types/game";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,41 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
     toast.success("Código copiado!");
   };
 
+  const handleAddBot = async () => {
+    if (players.length >= 6) {
+      toast.error("A sala está cheia.");
+      return;
+    }
+
+    const botNames = ["Bot Alpha", "Bot Beta", "Bot Gamma", "Bot Delta", "Bot Sigma"];
+    const existingBotNames = players.filter(p => p.is_bot).map(p => p.name);
+    const nextName = botNames.find(name => !existingBotNames.includes(name)) || `Bot ${players.length + 1}`;
+
+    try {
+      await supabase.from('players').insert([{
+        room_id: room.id,
+        user_id: null,
+        name: nextName,
+        is_host: false,
+        is_bot: true
+      }]);
+      toast.success(`${nextName} adicionado!`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao adicionar robô.");
+    }
+  };
+
+  const handleRemoveBot = async (botId: string) => {
+    try {
+      await supabase.from('players').delete().eq('id', botId);
+      toast.success("Robô removido.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao remover robô.");
+    }
+  };
+
   const handleStartGame = async () => {
     if (!canStart) {
       toast.error("Mínimo de 2 jogadores para iniciar.");
@@ -38,7 +73,13 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
       const cardInserts = [];
       let deckIdx = 0;
       
-      for (const player of players) {
+      const sortedPlayers = [...players].sort((a, b) => {
+        if (a.is_host) return -1;
+        if (b.is_host) return 1;
+        return 0;
+      });
+
+      for (const player of sortedPlayers) {
         cardInserts.push({ player_id: player.id, card_type: deck[deckIdx++], slot_index: 0 });
         cardInserts.push({ player_id: player.id, card_type: deck[deckIdx++], slot_index: 1 });
       }
@@ -50,7 +91,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
         .from('rooms')
         .update({ 
           status: 'playing', 
-          current_turn_player_id: players[0].id,
+          current_turn_player_id: sortedPlayers[0].id,
           deck: remainingDeck
         })
         .eq('id', room.id);
@@ -98,17 +139,29 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: idx * 0.1 }}
-              className="flex items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50"
+              className={`flex items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border ${player.is_bot ? 'border-purple-500/30' : 'border-slate-700/50'} relative group`}
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center font-black text-xl">
-                {player.name[0].toUpperCase()}
+              <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${player.is_bot ? 'from-purple-600 to-purple-900' : 'from-purple-500 to-purple-800'} flex items-center justify-center font-black text-xl`}>
+                {player.is_bot ? <Bot className="w-6 h-6 text-white" /> : player.name[0].toUpperCase()}
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-slate-200">{player.name}</span>
+                <span className={`font-bold ${player.is_bot ? 'text-purple-300' : 'text-slate-200'}`}>{player.name}</span>
                 {player.is_host && (
                   <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Host</span>
                 )}
+                {player.is_bot && (
+                  <span className="text-[10px] uppercase font-bold text-purple-400/70 tracking-wider">IA</span>
+                )}
               </div>
+              
+              {isHost && player.is_bot && (
+                <button
+                  onClick={() => handleRemoveBot(player.id)}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-slate-900/80 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </motion.div>
           ))}
           {Array.from({ length: Math.max(0, 4 - players.length) }).map((_, i) => (
@@ -128,14 +181,26 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
           SAIR DA SALA
         </Button>
         {isHost ? (
-          <Button
-            size="lg"
-            className="w-full h-16 text-xl font-bold rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all hover:scale-105"
-            onClick={handleStartGame}
-            disabled={!canStart}
-          >
-            <Play className="mr-2 h-6 w-6" /> INICIAR PARTIDA
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button
+              size="lg"
+              className="w-full h-16 text-xl font-bold rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all hover:scale-105"
+              onClick={handleStartGame}
+              disabled={!canStart}
+            >
+              <Play className="mr-2 h-6 w-6" /> INICIAR PARTIDA
+            </Button>
+            
+            {players.length < 6 && (
+              <Button
+                variant="outline"
+                className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-950/20 rounded-xl"
+                onClick={handleAddBot}
+              >
+                <Bot className="mr-2 h-4 w-4" /> + ADICIONAR ROBÔ
+              </Button>
+            )}
+          </div>
         ) : (
           <div className="text-center p-4 bg-slate-900/50 rounded-2xl border border-slate-800 text-slate-400 italic">
             Aguardando o host iniciar a partida...

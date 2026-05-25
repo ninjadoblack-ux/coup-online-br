@@ -132,9 +132,16 @@ export function useBotLogic(
     await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
 
     try {
-      // Simple decision: 10% chance to challenge if it's not a basic action
+      // Difficulty-based reaction
       const isBasic = ['Income', 'Foreign Aid', 'Coup'].includes(action.action_type);
-      const shouldChallenge = !isBasic && Math.random() < 0.15;
+      const difficulty = bot.bot_difficulty || 'moderate';
+      
+      let challengeProb = 0.15; // Moderate default
+      if (difficulty === 'easy') challengeProb = 0.05;
+      if (difficulty === 'hard') challengeProb = 0.30;
+
+      const shouldChallenge = !isBasic && Math.random() < challengeProb;
+
 
       if (shouldChallenge) {
         await supabase

@@ -46,6 +46,8 @@ export const GameView: React.FC<GameViewProps> = ({
 }) => {
   const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isClashing, setIsClashing] = useState(false);
+  const [clashActors, setClashActors] = useState<{ challenger: Player; victim: Player } | null>(null);
 
   // Game Engine & Bot Logic Hooks (Host only)
   useBotLogic(room, players, myPlayer, actions, allCards);
@@ -54,6 +56,31 @@ export const GameView: React.FC<GameViewProps> = ({
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
   const pendingAction = useMemo(() => actions.find(a => ['pending', 'blocking'].includes(a.status)) || null, [actions]);
+
+  // Handle clash detection
+  useEffect(() => {
+    const activeChallenge = actions.find(a => ['challenged', 'block_challenged'].includes(a.status));
+    if (activeChallenge && !isClashing) {
+      const challenger = players.find(p => p.id === activeChallenge.challenger_id);
+      const victimId = activeChallenge.status === 'challenged' ? activeChallenge.player_id : activeChallenge.blocker_id;
+      const victim = players.find(p => p.id === victimId);
+      
+      if (challenger && victim) {
+        setClashActors({ challenger, victim });
+        setIsClashing(true);
+        const timer = setTimeout(() => setIsClashing(false), 2500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [actions, players, isClashing]);
+
+  // Screen shake animation variants
+  const shakeVariants = {
+    shake: {
+      x: [0, -10, 10, -10, 10, 0],
+      transition: { duration: 0.4 }
+    }
+  };
 
   // Local 10s countdown that starts when the overlay first appears for this action,
   // independent of server-side expires_at drift.

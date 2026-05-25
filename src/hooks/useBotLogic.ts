@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, Player, GameAction } from '@/types/game';
+import { ACTION_LABELS } from '@/lib/game-logic';
 
 export function useBotLogic(
   room: Room | null,

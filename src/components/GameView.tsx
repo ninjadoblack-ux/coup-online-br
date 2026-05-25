@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { Player, Room, PlayerCard, GameAction, GameLog } from "@/types/game";
 import { GameCard } from "./GameCard";
 import { Button } from "@/components/ui/button";
@@ -46,9 +46,9 @@ export const GameView: React.FC<GameViewProps> = ({
   // Bot Logic Hook
   useBotLogic(room, players, myPlayer, actions);
   
-  const opponents = players.filter(p => p.id !== myPlayer?.id && p.status === 'alive');
-  const isMyTurn = room.current_turn_player_id === myPlayer?.id;
-  const pendingAction = actions.length > 0 ? actions[0] : null;
+  const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id && p.status === 'alive'), [players, myPlayer?.id]);
+  const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
+  const pendingAction = useMemo(() => actions.length > 0 ? actions[0] : null, [actions]);
 
   useEffect(() => {
     if (pendingAction?.expires_at) {
@@ -65,7 +65,7 @@ export const GameView: React.FC<GameViewProps> = ({
     }
   }, [pendingAction?.expires_at]);
 
-  const handleAction = async (actionType: string, targetId: string | null = null) => {
+  const handleAction = useCallback(async (actionType: string, targetId: string | null = null) => {
     if (!myPlayer || !isMyTurn) return;
 
     // Check if targeting is needed
@@ -95,9 +95,9 @@ export const GameView: React.FC<GameViewProps> = ({
       console.error(err);
       toast.error("Erro ao realizar ação.");
     }
-  };
+  }, [myPlayer, isMyTurn, room.id, players]);
 
-  const handleReaction = async (type: 'allow' | 'challenge' | 'block') => {
+  const handleReaction = useCallback(async (type: 'allow' | 'challenge' | 'block') => {
     if (!pendingAction || !myPlayer) return;
 
     try {
@@ -119,7 +119,7 @@ export const GameView: React.FC<GameViewProps> = ({
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [pendingAction, myPlayer, room.id, players]);
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-slate-950 cyber-grid">
@@ -400,3 +400,86 @@ export const GameView: React.FC<GameViewProps> = ({
     </div>
   );
 };
+
+const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelect }: any) => {
+  return (
+    <motion.div 
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      onClick={onSelect}
+      className={cn(
+        "flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] bg-slate-900/40 backdrop-blur-md border transition-all relative group min-w-[120px] sm:min-w-0",
+        currentTurnId === opponent.id ? "border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.2)]" : "border-slate-800",
+        opponent.status === 'dead' && "grayscale opacity-30",
+        isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
+      )}
+    >
+      {currentTurnId === opponent.id && (
+         <div className="absolute -top-1 -left-1 -right-1 -bottom-1 border border-purple-500 rounded-[1.6rem] sm:rounded-[2.1rem] animate-pulse pointer-events-none" />
+      )}
+
+      <div className="flex items-center gap-2">
+        <div className={cn(
+          "w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner",
+          opponent.is_bot ? "bg-gradient-to-br from-purple-500 to-purple-800" : "bg-gradient-to-br from-slate-700 to-slate-900"
+        )}>
+          {opponent.is_bot ? <Bot className="w-5 h-5 text-white" /> : opponent.name[0].toUpperCase()}
+        </div>
+        <div className="flex flex-col">
+          <span className={cn(
+            "text-xs font-black uppercase tracking-tighter",
+            opponent.is_bot ? "text-purple-300" : "text-slate-100"
+          )}>{opponent.name}</span>
+          <div className="flex items-center gap-1 text-slate-300 text-[10px] font-black">
+            <img src={coinSilver} alt="moedas" className="w-3.5 h-3.5 drop-shadow" /> {opponent.coins}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-1 mt-1">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="w-6 h-9 bg-slate-800 rounded-md border border-slate-700 flex items-center justify-center">
+            <div className="w-3 h-3 border border-slate-600 rotate-45 opacity-20" />
+          </div>
+        ))}
+      </div>
+
+      {currentTurnId === opponent.id && opponent.is_bot && (
+        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
+          <span className="text-[9px] text-purple-400 font-black animate-pulse uppercase tracking-[0.2em]">Processando...</span>
+        </div>
+      )}
+    </motion.div>
+  );
+});
+
+const ActionBtn = memo(({ action, disabled, isMyTurn, onClick }: any) => {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          disabled={disabled}
+          variant="outline"
+          className={cn(
+            "h-12 sm:h-14 text-[9px] sm:text-[10px] font-black uppercase tracking-wider border-slate-800 bg-slate-900/50 hover:bg-purple-600 hover:text-white hover:border-purple-400 transition-all rounded-xl relative group",
+            isMyTurn && !disabled && "border-slate-700 ring-1 ring-white/5",
+            ["Coup", "Assassinate"].includes(action) && "hover:bg-red-600 hover:border-red-400"
+          )}
+          onClick={onClick}
+        >
+          {ACTION_LABELS[action] || action}
+          <Info className="absolute top-1 right-1 w-2.5 h-2.5 opacity-20 group-hover:opacity-100 transition-opacity" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent className="bg-slate-900 border-slate-800 text-white p-3 max-w-xs rounded-xl shadow-2xl">
+        <div className="space-y-1">
+          <p className="font-black text-xs uppercase tracking-widest text-purple-400">{ACTION_LABELS[action] || action}</p>
+          <p className="text-[10px] leading-relaxed text-slate-300">{ACTION_DESCRIPTIONS[action]}</p>
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+});
+
+OpponentCard.displayName = "OpponentCard";
+ActionBtn.displayName = "ActionBtn";

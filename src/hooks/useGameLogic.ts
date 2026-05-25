@@ -18,19 +18,20 @@ export function useGameLogic(
     const pendingAction = actions.length > 0 ? actions[0] : null;
 
     if (pendingAction && pendingAction.status === 'pending') {
-      const interval = setInterval(() => {
-        const expiresAt = pendingAction.expires_at ? new Date(pendingAction.expires_at).getTime() : 0;
-        const now = Date.now();
+      const expiresAt = pendingAction.expires_at ? new Date(pendingAction.expires_at).getTime() : 0;
+      const now = Date.now();
+      const diff = expiresAt - now;
 
-        if (now >= expiresAt && expiresAt > 0) {
-          if (processingRef.current !== pendingAction.id) {
-            resolveAction(pendingAction);
-          }
+      // Use a precise timeout instead of an interval to avoid racing
+      const timeout = setTimeout(() => {
+        if (processingRef.current !== pendingAction.id) {
+          resolveAction(pendingAction);
         }
-      }, 1000);
-      return () => clearInterval(interval);
+      }, Math.max(0, diff));
+
+      return () => clearTimeout(timeout);
     }
-  }, [room?.status, actions.length, isHost, players]);
+  }, [room?.status, actions[0]?.id, isHost]); // Only re-run when status or current pending action changes
 
   const resolveAction = async (action: GameAction) => {
     if (processingRef.current === action.id) return;
@@ -45,13 +46,13 @@ export function useGameLogic(
       // 1. Execute the action effects
       switch (action.action_type) {
         case 'Income':
-          await updateCoins(player.id, player.coins + 1);
+          await updateCoins(player.id, (player.coins || 0) + 1);
           break;
         case 'Foreign Aid':
-          await updateCoins(player.id, player.coins + 2);
+          await updateCoins(player.id, (player.coins || 0) + 2);
           break;
         case 'Tax':
-          await updateCoins(player.id, player.coins + 3);
+          await updateCoins(player.id, (player.coins || 0) + 3);
           break;
         case 'Steal':
           if (action.target_id) {
@@ -64,15 +65,13 @@ export function useGameLogic(
           }
           break;
         case 'Assassinate':
-          // Cost is paid regardless of whether it succeeds in some rules, but usually paid on announcement
-          // Let's pay it now if not already paid
-          await updateCoins(player.id, player.coins - 3);
+          // Cost is paid on announcement now, but we verify target still exists
           if (action.target_id) {
             await loseCard(action.target_id);
           }
           break;
         case 'Coup':
-          await updateCoins(player.id, player.coins - 7);
+          // Cost is paid on announcement now
           if (action.target_id) {
             await loseCard(action.target_id);
           }
@@ -111,7 +110,8 @@ export function useGameLogic(
   };
 
   const updateCoins = async (playerId: string, coins: number) => {
-    await supabase.from('players').update({ coins: Math.max(0, coins) }).eq('id', playerId);
+    const { error } = await supabase.from('players').update({ coins: Math.max(0, coins) }).eq('id', playerId);
+    if (error) console.error("Error updating coins:", error);
   };
 
   const loseCard = async (playerId: string) => {

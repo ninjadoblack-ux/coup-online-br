@@ -323,7 +323,7 @@ export const GameView: React.FC<GameViewProps> = ({
               
               <div className="flex flex-col gap-3 sm:gap-4 mt-8 sm:mt-12">
                 {/* Only others can challenge an action, but anyone can challenge a block */}
-                {(pendingAction.status === 'blocking' || pendingAction.player_id !== myPlayer.id) && (
+                {(pendingAction.status === 'blocking' || pendingAction.player_id !== myPlayer?.id) && (
                   <Button 
                     size="lg"
                     className="h-14 sm:h-16 bg-red-600 hover:bg-red-500 font-black text-lg sm:text-xl rounded-2xl shadow-lg shadow-red-900/20 border-t border-red-400/30"
@@ -345,7 +345,7 @@ export const GameView: React.FC<GameViewProps> = ({
                   {/* Blocking logic: can block if it's blockable AND I'm not the actor AND it's not already being blocked */}
                   {pendingAction.status !== 'blocking' && 
                    BLOCKABLE_ACTIONS[pendingAction.action_type] && 
-                   pendingAction.player_id !== myPlayer.id && (
+                   pendingAction.player_id !== myPlayer?.id && (
                     <Button 
                       variant="outline" 
                       className="h-12 sm:h-14 border-slate-700 bg-slate-800 text-slate-300 font-bold rounded-2xl hover:bg-slate-700"

@@ -120,6 +120,13 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
       </div>
 
       <div className="w-full max-w-xs space-y-4">
+        <Button
+          variant="ghost"
+          className="w-full text-slate-500 hover:text-red-400"
+          onClick={onLeaveRoom}
+        >
+          SAIR DA SALA
+        </Button>
         {isHost ? (
           <Button
             size="lg"

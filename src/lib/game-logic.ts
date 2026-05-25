@@ -34,7 +34,17 @@ export const ACTION_LABELS: Record<string, string> = {
   'Steal': 'Extorquir',
   'Assassinate': 'Assassinar',
   'Exchange': 'Trocar',
-  'Coup': 'Golpe de Estado'
+  'Coup': 'Golpe de Estado',
+  'Block': 'Bloquear',
+  'Challenge': 'Contestar'
+};
+
+export const CARD_LABELS: Record<string, string> = {
+  'Duke': 'Duque',
+  'Assassin': 'Assassino',
+  'Ambassador': 'Embaixador',
+  'Captain': 'Capitão',
+  'Contessa': 'Condessa'
 };
 
 export const ACTION_DESCRIPTIONS: Record<string, string> = {

@@ -58,7 +58,7 @@ export function useBotLogic(
         return botCards.some(c => c.card_type === req);
       };
 
-      const legalActions = ['Income', 'Foreign Aid', 'Tax', 'Steal', 'Assassinate', 'Exchange', 'Coup'].filter(canTakeAction);
+      const legalActions = ['Income', 'Foreign Aid', 'Tax', 'Steal', 'Assassinate', 'Exchange', 'Coup'];
       let actionType = 'Income';
 
       const difficulty = bot.bot_difficulty || 'moderate';

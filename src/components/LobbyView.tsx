@@ -1,0 +1,144 @@
+
+import React from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Copy, Play, Users } from "lucide-react";
+import { Player, Room } from "@/types/game";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { INITIAL_DECK, shuffleDeck } from "@/lib/game-logic";
+
+interface LobbyViewProps {
+  room: Room;
+  players: Player[];
+  myPlayer: Player | null;
+}
+
+export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer }) => {
+  const isHost = myPlayer?.is_host || false;
+  const canStart = players.length >= 2;
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(room.code);
+    toast.success("Código copiado!");
+  };
+
+  const handleStartGame = async () => {
+    if (!canStart) {
+      toast.error("Mínimo de 2 jogadores para iniciar.");
+      return;
+    }
+
+    try {
+      // Shuffled deck
+      const deck = shuffleDeck(INITIAL_DECK);
+      
+      // Distribute 2 cards to each player
+      const cardInserts = [];
+      let deckIdx = 0;
+      
+      for (const player of players) {
+        cardInserts.push({ player_id: player.id, card_type: deck[deckIdx++], slot_index: 0 });
+        cardInserts.push({ player_id: player.id, card_type: deck[deckIdx++], slot_index: 1 });
+      }
+
+      const remainingDeck = deck.slice(deckIdx);
+
+      // Update room status and current turn
+      await supabase
+        .from('rooms')
+        .update({ 
+          status: 'playing', 
+          current_turn_player_id: players[0].id,
+          deck: remainingDeck
+        })
+        .eq('id', room.id);
+
+      // Insert cards
+      await supabase.from('player_cards').insert(cardInserts);
+
+      // Log start
+      await supabase.from('game_logs').insert([{
+        room_id: room.id,
+        message: "A partida começou!"
+      }]);
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao iniciar a partida.");
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center w-full max-w-2xl mx-auto gap-8 px-4 py-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-slate-400 uppercase tracking-widest text-sm font-bold">Código da Sala</h2>
+        <div 
+          className="flex items-center gap-4 bg-slate-900 border-2 border-purple-500/30 px-8 py-4 rounded-3xl cursor-pointer hover:border-purple-500 transition-all group"
+          onClick={copyCode}
+        >
+          <span className="text-5xl font-black tracking-[0.2em] text-purple-400 group-hover:scale-110 transition-transform">
+            {room.code}
+          </span>
+          <Copy className="w-6 h-6 text-slate-500 group-hover:text-purple-400" />
+        </div>
+      </div>
+
+      <div className="w-full bg-slate-900/50 border border-slate-800 rounded-3xl p-6 backdrop-blur-sm">
+        <div className="flex items-center gap-2 mb-6">
+          <Users className="w-5 h-5 text-purple-500" />
+          <h3 className="text-xl font-bold uppercase tracking-tight">Jogadores ({players.length}/6)</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {players.map((player, idx) => (
+            <motion.div
+              key={player.id}
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: idx * 0.1 }}
+              className="flex items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50"
+            >
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center font-black text-xl">
+                {player.name[0].toUpperCase()}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-slate-200">{player.name}</span>
+                {player.is_host && (
+                  <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Host</span>
+                )}
+              </div>
+            </motion.div>
+          ))}
+          {Array.from({ length: Math.max(0, 4 - players.length) }).map((_, i) => (
+            <div key={i} className="h-20 border-2 border-dashed border-slate-800 rounded-2xl flex items-center justify-center text-slate-700">
+              Aguardando...
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="w-full max-w-xs space-y-4">
+        {isHost ? (
+          <Button
+            size="lg"
+            className="w-full h-16 text-xl font-bold rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all hover:scale-105"
+            onClick={handleStartGame}
+            disabled={!canStart}
+          >
+            <Play className="mr-2 h-6 w-6" /> INICIAR PARTIDA
+          </Button>
+        ) : (
+          <div className="text-center p-4 bg-slate-900/50 rounded-2xl border border-slate-800 text-slate-400 italic">
+            Aguardando o host iniciar a partida...
+          </div>
+        )}
+        {!canStart && isHost && (
+          <p className="text-center text-xs text-red-400 uppercase font-bold tracking-tighter">
+            Mínimo de 2 jogadores necessários
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};

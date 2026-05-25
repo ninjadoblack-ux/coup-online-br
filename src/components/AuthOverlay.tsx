@@ -37,6 +37,19 @@ export const AuthOverlay: React.FC = () => {
     }
   };
 
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+      toast.success("Entrando como convidado...");
+    } catch (err: any) {
+      toast.error("Erro ao entrar como convidado: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 px-4">
       <motion.div 
@@ -55,7 +68,7 @@ export const AuthOverlay: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="h-12 bg-slate-800 border-slate-700 text-white rounded-xl focus:ring-purple-500"
-            required
+            required={!loading}
           />
           <Input
             type="password"
@@ -63,7 +76,7 @@ export const AuthOverlay: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="h-12 bg-slate-800 border-slate-700 text-white rounded-xl focus:ring-purple-500"
-            required
+            required={!loading}
           />
           <Button 
             className="w-full h-12 bg-purple-600 hover:bg-purple-500 font-bold text-lg rounded-xl"
@@ -72,6 +85,24 @@ export const AuthOverlay: React.FC = () => {
             {loading ? "CARREGANDO..." : (isLogin ? "ENTRAR" : "CADASTRAR")}
           </Button>
         </form>
+
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-slate-800"></span>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-slate-900 px-2 text-slate-500 font-bold">Ou</span>
+          </div>
+        </div>
+
+        <Button 
+          variant="outline"
+          className="w-full h-12 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white font-bold text-lg rounded-xl"
+          onClick={handleGuestLogin}
+          disabled={loading}
+        >
+          {loading ? "CARREGANDO..." : "ENTRAR COMO CONVIDADO"}
+        </Button>
         
         <div className="mt-6 text-center">
           <button 

@@ -48,7 +48,7 @@ export const GameView: React.FC<GameViewProps> = ({
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   // Game Engine & Bot Logic Hooks (Host only)
-  useBotLogic(room, players, myPlayer, actions);
+  useBotLogic(room, players, myPlayer, actions, allCards);
   useGameLogic(room, players, myPlayer, actions);
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);

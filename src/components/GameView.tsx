@@ -429,7 +429,7 @@ const ActionBtn = memo(({ action, disabled, hasCard, isMyTurn, onClick }: any) =
           </div>
           <p className="text-[10px] leading-relaxed text-slate-300 font-medium">{ACTION_DESCRIPTIONS[action]}</p>
           {!hasCard && (
-            <p className="text-[9px] text-red-400 font-bold uppercase mt-2">Você precisa da carta de {ACTION_REQUIRED_CARDS[action]} para esta ação.</p>
+            <p className="text-[9px] text-red-400 font-bold uppercase mt-2">Você precisa da carta de {CARD_LABELS[ACTION_REQUIRED_CARDS[action]!] || ACTION_REQUIRED_CARDS[action]} para esta ação.</p>
           )}
         </div>
       </TooltipContent>

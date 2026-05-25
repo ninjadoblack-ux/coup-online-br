@@ -22,6 +22,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+const EMOTES = ["👁️", "💧", "😈", "🤡", "🤔", "🤫", "🔥", "🤝"];
+
 interface GameViewProps {
   room: Room;
   players: Player[];

@@ -14,7 +14,234 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_actions: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          player_id: string | null
+          room_id: string | null
+          status: string | null
+          target_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          player_id?: string | null
+          room_id?: string | null
+          status?: string | null
+          target_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          player_id?: string | null
+          room_id?: string | null
+          status?: string | null
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_actions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_actions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_actions_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          room_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          room_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          room_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_logs_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_cards: {
+        Row: {
+          card_type: string
+          id: string
+          is_revealed: boolean | null
+          player_id: string | null
+          slot_index: number
+        }
+        Insert: {
+          card_type: string
+          id?: string
+          is_revealed?: boolean | null
+          player_id?: string | null
+          slot_index: number
+        }
+        Update: {
+          card_type?: string
+          id?: string
+          is_revealed?: boolean | null
+          player_id?: string | null
+          slot_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_cards_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          avatar: string | null
+          coins: number | null
+          id: string
+          is_host: boolean | null
+          joined_at: string | null
+          name: string
+          room_id: string | null
+          status: string | null
+          turn_order: number | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          coins?: number | null
+          id?: string
+          is_host?: boolean | null
+          joined_at?: string | null
+          name: string
+          room_id?: string | null
+          status?: string | null
+          turn_order?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          coins?: number | null
+          id?: string
+          is_host?: boolean | null
+          joined_at?: string | null
+          name?: string
+          room_id?: string | null
+          status?: string | null
+          turn_order?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      rooms: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          current_turn_player_id: string | null
+          deck: string[] | null
+          id: string
+          status: string
+          winner_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          current_turn_player_id?: string | null
+          deck?: string[] | null
+          id?: string
+          status?: string
+          winner_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          current_turn_player_id?: string | null
+          deck?: string[] | null
+          id?: string
+          status?: string
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_current_player"
+            columns: ["current_turn_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

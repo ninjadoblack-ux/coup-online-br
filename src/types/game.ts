@@ -1,0 +1,66 @@
+
+export type CardType = 'Duke' | 'Assassin' | 'Ambassador' | 'Captain' | 'Contessa';
+
+export type RoomStatus = 'waiting' | 'playing' | 'finished';
+
+export type PlayerStatus = 'alive' | 'dead';
+
+export type ActionType = 
+  | 'Income' 
+  | 'Foreign Aid' 
+  | 'Tax' 
+  | 'Steal' 
+  | 'Assassinate' 
+  | 'Exchange' 
+  | 'Coup'
+  | 'Block'
+  | 'Challenge';
+
+export interface Player {
+  id: string;
+  room_id: string;
+  user_id: string;
+  name: string;
+  avatar: string | null;
+  coins: number;
+  status: PlayerStatus;
+  is_host: boolean;
+  turn_order: number | null;
+}
+
+export interface PlayerCard {
+  id: string;
+  player_id: string;
+  card_type: CardType;
+  is_revealed: boolean;
+  slot_index: number;
+}
+
+export interface Room {
+  id: string;
+  code: string;
+  status: RoomStatus;
+  created_at: string;
+  created_by: string | null;
+  winner_id: string | null;
+  current_turn_player_id: string | null;
+  deck: CardType[];
+}
+
+export interface GameAction {
+  id: string;
+  room_id: string;
+  player_id: string;
+  target_id: string | null;
+  action_type: ActionType;
+  status: 'pending' | 'completed' | 'blocked' | 'challenged' | 'failed';
+  created_at: string;
+  expires_at: string | null;
+}
+
+export interface GameLog {
+  id: string;
+  room_id: string;
+  message: string;
+  created_at: string;
+}

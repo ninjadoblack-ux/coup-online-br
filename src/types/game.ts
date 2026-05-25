@@ -19,12 +19,13 @@ export type ActionType =
 export interface Player {
   id: string;
   room_id: string;
-  user_id: string;
+  user_id: string | null;
   name: string;
   avatar: string | null;
   coins: number;
   status: PlayerStatus;
   is_host: boolean;
+  is_bot?: boolean;
   turn_order: number | null;
 }
 

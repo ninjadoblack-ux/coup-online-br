@@ -183,7 +183,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
                   "w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg transition-transform group-hover:scale-110",
                   player.is_bot ? 'bg-gradient-to-br from-purple-500 to-purple-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'
                 )}>
-                  {player.is_bot ? <Bot className="w-8 h-8 text-white" /> : player.name[0].toUpperCase()}
+                  {player.is_bot ? <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" /> : player.name[0].toUpperCase()}
                 </div>
                 <div className="flex flex-col flex-1">
                   <span className={cn(

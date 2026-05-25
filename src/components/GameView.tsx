@@ -78,7 +78,22 @@ export const GameView: React.FC<GameViewProps> = ({
       return;
     }
 
+    const requiredCard = ACTION_REQUIRED_CARDS[actionType];
+    const hasCard = !requiredCard || myCards.some(c => c.card_type === requiredCard && !c.is_revealed);
+
+    if (!hasCard) {
+      const confirmBluff = window.confirm(`Você não tem o ${CARD_LABELS[requiredCard!]}. Deseja BLEFAR e anunciar esta ação?`);
+      if (!confirmBluff) return;
+    }
+
     try {
+      // Cost is paid upfront for Assassinate and Coup to avoid double-spend/delay issues
+      if (actionType === 'Assassinate') {
+        await supabase.from('players').update({ coins: myPlayer.coins - 3 }).eq('id', myPlayer.id);
+      } else if (actionType === 'Coup') {
+        await supabase.from('players').update({ coins: myPlayer.coins - 7 }).eq('id', myPlayer.id);
+      }
+
       await supabase.from('game_actions').insert([{
         room_id: room.id,
         player_id: myPlayer.id,
@@ -99,7 +114,7 @@ export const GameView: React.FC<GameViewProps> = ({
       console.error(err);
       toast.error("Erro ao realizar ação.");
     }
-  }, [myPlayer, isMyTurn, room.id, players]);
+  }, [myPlayer, isMyTurn, room.id, players, myCards]);
 
   const handleReaction = useCallback(async (type: 'allow' | 'challenge' | 'block') => {
     if (!pendingAction || !myPlayer) return;

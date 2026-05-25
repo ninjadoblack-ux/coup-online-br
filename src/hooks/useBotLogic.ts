@@ -20,22 +20,28 @@ export function useBotLogic(
     const currentTurnPlayer = players.find(p => p.id === room.current_turn_player_id);
 
     // 1. Bot's Turn to act
-    if (currentTurnPlayer?.is_bot && !pendingAction && !thinkingRef.current[currentTurnPlayer.id]) {
-      handleBotTurn(currentTurnPlayer);
+    if (currentTurnPlayer?.is_bot && !pendingAction) {
+      const botId = currentTurnPlayer.id;
+      if (!thinkingRef.current[botId]) {
+        handleBotTurn(currentTurnPlayer);
+      }
     }
 
     // 2. Bot needs to react to an action
     if (pendingAction && pendingAction.status === 'pending') {
-      const actor = players.find(p => p.id === pendingAction.player_id);
+      const actionId = pendingAction.id;
       
       // Bots react to other players' actions
       players.forEach(player => {
-        if (player.is_bot && player.id !== pendingAction.player_id && player.status === 'alive' && !thinkingRef.current[`react_${player.id}_${pendingAction.id}`]) {
-          handleBotReaction(player, pendingAction);
+        if (player.is_bot && player.id !== pendingAction.player_id && player.status === 'alive') {
+          const reactionKey = `react_${player.id}_${actionId}`;
+          if (!thinkingRef.current[reactionKey]) {
+            handleBotReaction(player, pendingAction);
+          }
         }
       });
     }
-  }, [room?.current_turn_player_id, actions, players, isHost]);
+  }, [room?.current_turn_player_id, actions.length, isHost]); // Only run when turn changes or number of actions change
 
   const handleBotTurn = async (bot: Player) => {
     thinkingRef.current[bot.id] = true;

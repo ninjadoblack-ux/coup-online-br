@@ -119,7 +119,7 @@ export function useBotLogic(
         target_id: targetId,
         action_type: actionType,
         status: 'pending',
-        expires_at: new Date(Date.now() + 10000).toISOString()
+        expires_at: new Date(Date.now() + (actionType === 'Income' ? 2000 : 10000)).toISOString()
       }]);
 
       await supabase.from('game_logs').insert([{
@@ -167,8 +167,11 @@ export function useBotLogic(
           message: `${bot.name} CONTESTOU ${players.find(p => p.id === action.player_id)?.name}!`
         }]);
       } else {
-        // Just log that the bot allowed it (silent or log)
-        // For now, bots just stay quiet and let the timer run or others react
+        // Bot allows the action
+        await supabase.from('game_logs').insert([{
+          room_id: room!.id,
+          message: `${bot.name} permitiu a ação.`
+        }]);
       }
     } catch (err) {
       console.error('Error in bot reaction:', err);

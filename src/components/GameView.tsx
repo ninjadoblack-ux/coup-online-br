@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBotLogic } from "@/hooks/useBotLogic";
+import { useGameLogic } from "@/hooks/useGameLogic";
 import { Bot, Info } from "lucide-react";
 import {
   Tooltip,
@@ -43,8 +44,9 @@ export const GameView: React.FC<GameViewProps> = ({
   const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
-  // Bot Logic Hook
+  // Game Engine & Bot Logic Hooks (Host only)
   useBotLogic(room, players, myPlayer, actions);
+  useGameLogic(room, players, myPlayer, actions);
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
@@ -80,7 +82,7 @@ export const GameView: React.FC<GameViewProps> = ({
         target_id: targetId,
         action_type: actionType,
         status: 'pending',
-        expires_at: new Date(Date.now() + 10000).toISOString()
+        expires_at: new Date(Date.now() + (actionType === 'Income' ? 2000 : 10000)).toISOString()
       }]);
 
       await supabase.from('game_logs').insert([{
@@ -324,7 +326,7 @@ export const GameView: React.FC<GameViewProps> = ({
                   <ActionBtn 
                     key={action}
                     action={action}
-                    disabled={!isMyTurn || pendingAction !== null}
+                    disabled={!isMyTurn || pendingAction !== null || ((myPlayer?.coins ?? 0) >= 10 && action !== 'Coup')}
                     isMyTurn={isMyTurn}
                     onClick={() => handleAction(action)}
                   />

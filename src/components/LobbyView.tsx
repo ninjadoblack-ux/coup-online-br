@@ -91,9 +91,16 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
         return 0;
       });
 
-      for (const player of sortedPlayers) {
+      for (let i = 0; i < sortedPlayers.length; i++) {
+        const player = sortedPlayers[i];
         cardInserts.push({ player_id: player.id, card_type: deck[deckIdx++], slot_index: 0 });
         cardInserts.push({ player_id: player.id, card_type: deck[deckIdx++], slot_index: 1 });
+        
+        // Update turn order and initial coins (just to be safe)
+        await supabase
+          .from('players')
+          .update({ turn_order: i, coins: 2, status: 'alive' })
+          .eq('id', player.id);
       }
 
       const remainingDeck = deck.slice(deckIdx);

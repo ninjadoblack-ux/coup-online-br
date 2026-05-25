@@ -125,20 +125,37 @@ export const GameView: React.FC<GameViewProps> = ({
 
     try {
       if (type === 'allow') {
-        toast.info("Você permitiu a ação.");
+        // Encurta o expires_at para que o host resolva imediatamente
+        await supabase
+          .from('game_actions')
+          .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
+          .eq('id', pendingAction.id);
+        await supabase.from('game_logs').insert([{
+          room_id: room.id,
+          message: `${myPlayer.name} permitiu a ação.`
+        }]);
       } else if (type === 'challenge') {
         await supabase
           .from('game_actions')
           .update({ status: 'challenged' })
           .eq('id', pendingAction.id);
-        
         await supabase.from('game_logs').insert([{
           room_id: room.id,
           message: `${myPlayer.name} CONTESTOU ${players.find(p => p.id === pendingAction.player_id)?.name}!`
         }]);
+      } else if (type === 'block') {
+        await supabase
+          .from('game_actions')
+          .update({ status: 'blocked' })
+          .eq('id', pendingAction.id);
+        await supabase.from('game_logs').insert([{
+          room_id: room.id,
+          message: `${myPlayer.name} BLOQUEOU ${players.find(p => p.id === pendingAction.player_id)?.name}!`
+        }]);
       }
     } catch (err) {
       console.error(err);
+      toast.error("Erro ao reagir.");
     }
   }, [pendingAction, myPlayer, room.id, players]);
 

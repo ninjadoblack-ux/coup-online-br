@@ -6,8 +6,8 @@ import { LobbyView } from "./LobbyView";
 import { GameView } from "./GameView";
 import { AuthOverlay } from "./AuthOverlay";
 import { TutorialDialog } from "./TutorialDialog";
+import { LoadingScreen } from "./LoadingScreen";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
 
 export const GameContainer: React.FC = () => {
   const [roomId, setRoomId] = useState<string | null>(() => {

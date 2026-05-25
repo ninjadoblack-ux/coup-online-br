@@ -15,7 +15,7 @@ interface LobbyViewProps {
   onLeaveRoom: () => void;
 }
 
-export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer }) => {
+export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, onLeaveRoom }) => {
   const isHost = myPlayer?.is_host || false;
   const canStart = players.length >= 2;
 

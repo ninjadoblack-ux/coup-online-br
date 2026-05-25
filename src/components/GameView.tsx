@@ -366,21 +366,33 @@ export const GameView: React.FC<GameViewProps> = ({
                 </div>
              </div>
              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {Object.keys(ACTION_DESCRIPTIONS).map((action) => (
-                <Button
-                  key={action}
-                  disabled={!isMyTurn || pendingAction !== null}
-                  variant="outline"
-                  className={cn(
-                    "h-14 text-[10px] font-black uppercase tracking-wider border-slate-800 bg-slate-900/50 hover:bg-purple-600 hover:text-white hover:border-purple-400 transition-all rounded-xl",
-                    isMyTurn && "border-slate-700 ring-1 ring-white/5",
-                    ["Coup", "Assassinate"].includes(action) && "hover:bg-red-600 hover:border-red-400"
-                  )}
-                  onClick={() => handleAction(action)}
-                >
-                  {action}
-                </Button>
-              ))}
+              <TooltipProvider>
+                {Object.keys(ACTION_DESCRIPTIONS).map((action) => (
+                  <Tooltip key={action}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        disabled={!isMyTurn || pendingAction !== null}
+                        variant="outline"
+                        className={cn(
+                          "h-14 text-[10px] font-black uppercase tracking-wider border-slate-800 bg-slate-900/50 hover:bg-purple-600 hover:text-white hover:border-purple-400 transition-all rounded-xl relative group",
+                          isMyTurn && "border-slate-700 ring-1 ring-white/5",
+                          ["Coup", "Assassinate"].includes(action) && "hover:bg-red-600 hover:border-red-400"
+                        )}
+                        onClick={() => handleAction(action)}
+                      >
+                        {ACTION_LABELS[action] || action}
+                        <Info className="absolute top-1 right-1 w-2.5 h-2.5 opacity-20 group-hover:opacity-100 transition-opacity" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-900 border-slate-800 text-white p-3 max-w-xs rounded-xl shadow-2xl">
+                      <div className="space-y-1">
+                        <p className="font-black uppercase tracking-widest text-xs text-purple-400">{ACTION_LABELS[action]}</p>
+                        <p className="text-[10px] text-slate-300 leading-relaxed font-medium">{ACTION_DESCRIPTIONS[action]}</p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
             </div>
           </div>
         </div>

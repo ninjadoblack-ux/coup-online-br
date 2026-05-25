@@ -53,22 +53,26 @@ export const GameView: React.FC<GameViewProps> = ({
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
-  const pendingAction = useMemo(() => actions.length > 0 ? actions[0] : null, [actions]);
+  const pendingAction = useMemo(() => actions.find(a => a.status === 'pending') || null, [actions]);
 
+  // Local 10s countdown that starts when the overlay first appears for this action,
+  // independent of server-side expires_at drift.
   useEffect(() => {
-    if (pendingAction?.expires_at) {
-      const interval = setInterval(() => {
-        const expires = new Date(pendingAction.expires_at!).getTime();
-        const now = new Date().getTime();
-        const diff = Math.max(0, Math.floor((expires - now) / 1000));
-        setTimeLeft(diff);
-        if (diff <= 0) clearInterval(interval);
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
+    if (!pendingAction) {
       setTimeLeft(null);
+      return;
     }
-  }, [pendingAction?.expires_at]);
+    const REACTION_SECONDS = 10;
+    setTimeLeft(REACTION_SECONDS);
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      const remaining = Math.max(0, REACTION_SECONDS - elapsed);
+      setTimeLeft(remaining);
+      if (remaining <= 0) clearInterval(interval);
+    }, 250);
+    return () => clearInterval(interval);
+  }, [pendingAction?.id]);
 
   const handleAction = useCallback(async (actionType: string, targetId: string | null = null) => {
     if (!myPlayer || !isMyTurn) return;
@@ -100,7 +104,7 @@ export const GameView: React.FC<GameViewProps> = ({
         target_id: targetId,
         action_type: actionType,
         status: 'pending',
-        expires_at: new Date(Date.now() + (actionType === 'Income' ? 2000 : 10000)).toISOString()
+        expires_at: new Date(Date.now() + (actionType === 'Income' ? 2000 : 12000)).toISOString()
       }]);
 
       await supabase.from('game_logs').insert([{
@@ -121,20 +125,37 @@ export const GameView: React.FC<GameViewProps> = ({
 
     try {
       if (type === 'allow') {
-        toast.info("Você permitiu a ação.");
+        // Encurta o expires_at para que o host resolva imediatamente
+        await supabase
+          .from('game_actions')
+          .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
+          .eq('id', pendingAction.id);
+        await supabase.from('game_logs').insert([{
+          room_id: room.id,
+          message: `${myPlayer.name} permitiu a ação.`
+        }]);
       } else if (type === 'challenge') {
         await supabase
           .from('game_actions')
           .update({ status: 'challenged' })
           .eq('id', pendingAction.id);
-        
         await supabase.from('game_logs').insert([{
           room_id: room.id,
           message: `${myPlayer.name} CONTESTOU ${players.find(p => p.id === pendingAction.player_id)?.name}!`
         }]);
+      } else if (type === 'block') {
+        await supabase
+          .from('game_actions')
+          .update({ status: 'blocked' })
+          .eq('id', pendingAction.id);
+        await supabase.from('game_logs').insert([{
+          room_id: room.id,
+          message: `${myPlayer.name} BLOQUEOU ${players.find(p => p.id === pendingAction.player_id)?.name}!`
+        }]);
       }
     } catch (err) {
       console.error(err);
+      toast.error("Erro ao reagir.");
     }
   }, [pendingAction, myPlayer, room.id, players]);
 
@@ -284,6 +305,7 @@ export const GameView: React.FC<GameViewProps> = ({
                   <Button 
                     variant="outline" 
                     className="h-12 sm:h-14 border-slate-700 bg-slate-800 text-slate-300 font-bold rounded-2xl hover:bg-slate-700"
+                    onClick={() => handleReaction('block')}
                   >
                     BLOQUEAR
                   </Button>

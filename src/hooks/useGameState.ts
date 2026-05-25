@@ -44,7 +44,7 @@ export function useGameState(roomId: string | null) {
             const [cardsRes, logsRes, actionsRes] = await Promise.all([
               supabase.from('player_cards').select('*').in('player_id', typedPlayers.map(p => p.id)),
               supabase.from('game_logs').select('*').eq('room_id', roomId).order('created_at', { ascending: false }).limit(20),
-              supabase.from('game_actions').select('*').eq('room_id', roomId).eq('status', 'pending')
+              supabase.from('game_actions').select('*').eq('room_id', roomId).in('status', ['pending', 'challenged', 'blocked'])
             ]);
             
             if (!mounted) return;
@@ -118,7 +118,8 @@ export function useGameState(roomId: string | null) {
             setActions(prev => [...prev, payload.new as GameAction]);
           } else if (payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
             const current = (payload.new || payload.old) as GameAction;
-            if (current.status !== 'pending' || payload.eventType === 'DELETE') {
+            const activeStatuses = ['pending', 'challenged', 'blocked'];
+            if (payload.eventType === 'DELETE' || !activeStatuses.includes(current.status)) {
               setActions(prev => prev.filter(a => a.id !== current.id));
             } else {
               setActions(prev => prev.map(a => a.id === current.id ? (payload.new as GameAction) : a));

@@ -66,3 +66,9 @@ export const ACTION_REQUIRED_CARDS: Record<string, CardType | null> = {
   'Exchange': 'Ambassador',
   'Coup': null
 };
+
+export const BLOCKABLE_ACTIONS: Record<string, CardType[]> = {
+  'Foreign Aid': ['Duke'],
+  'Steal': ['Captain', 'Ambassador'],
+  'Assassinate': ['Contessa']
+};

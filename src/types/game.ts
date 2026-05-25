@@ -57,7 +57,9 @@ export interface GameAction {
   player_id: string;
   target_id: string | null;
   action_type: ActionType;
-  status: 'pending' | 'completed' | 'blocked' | 'challenged' | 'failed';
+  status: 'pending' | 'completed' | 'blocked' | 'challenged' | 'failed' | 'blocking' | 'block_challenged';
+  challenger_id?: string | null;
+  blocker_id?: string | null;
   created_at: string;
   expires_at: string | null;
 }

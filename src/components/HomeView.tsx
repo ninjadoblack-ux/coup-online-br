@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogIn, Plus } from "lucide-react";
+import { LogIn, Plus, BookOpen } from "lucide-react";
 import { generateRoomCode } from "@/lib/game-logic";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

@@ -65,42 +65,41 @@ export function useBotLogic(
 
       // Difficulty-based decision making
       if (difficulty === 'easy') {
-        if (bot.coins >= 10 && legalActions.includes('Coup')) {
+        if (bot.coins >= 10) {
           actionType = 'Coup';
         } else {
           const random = Math.random();
-          if (random > 0.9 && legalActions.includes('Tax')) actionType = 'Tax';
-          else if (random > 0.8 && legalActions.includes('Foreign Aid')) actionType = 'Foreign Aid';
-          else if (random > 0.7 && legalActions.includes('Steal')) actionType = 'Steal';
+          if (random > 0.9) actionType = 'Tax';
+          else if (random > 0.8) actionType = 'Foreign Aid';
+          else if (random > 0.7) actionType = 'Steal';
           else actionType = 'Income';
         }
       } else if (difficulty === 'moderate') {
-        if (bot.coins >= 10 && legalActions.includes('Coup')) {
+        if (bot.coins >= 10) {
           actionType = 'Coup';
-        } else if (bot.coins >= 7 && Math.random() > 0.5 && legalActions.includes('Coup')) {
+        } else if (bot.coins >= 7 && Math.random() > 0.5) {
           actionType = 'Coup';
-        } else if (bot.coins >= 3 && Math.random() > 0.7 && legalActions.includes('Assassinate')) {
+        } else if (bot.coins >= 3 && Math.random() > 0.7) {
           actionType = 'Assassinate';
         } else {
           const random = Math.random();
-          if (random > 0.8 && legalActions.includes('Tax')) actionType = 'Tax';
-          else if (random > 0.6 && legalActions.includes('Steal')) actionType = 'Steal';
-          else if (random > 0.4 && legalActions.includes('Foreign Aid')) actionType = 'Foreign Aid';
-          else if (random > 0.2 && legalActions.includes('Exchange')) actionType = 'Exchange';
+          if (random > 0.8) actionType = 'Tax';
+          else if (random > 0.6) actionType = 'Steal';
+          else if (random > 0.4) actionType = 'Foreign Aid';
+          else if (random > 0.2) actionType = 'Exchange';
           else actionType = 'Income';
         }
       } else { // Hard
-        if (bot.coins >= 7 && legalActions.includes('Coup')) {
+        if (bot.coins >= 7) {
           actionType = 'Coup';
-        } else if (bot.coins >= 3 && legalActions.includes('Assassinate')) {
+        } else if (bot.coins >= 3) {
           // More aggressive assassination
-          actionType = Math.random() > 0.4 ? 'Assassinate' : (legalActions.includes('Tax') ? 'Tax' : 'Income');
+          actionType = Math.random() > 0.4 ? 'Assassinate' : 'Tax';
         } else {
           const random = Math.random();
-          if (random > 0.6 && legalActions.includes('Tax')) actionType = 'Tax';
-          else if (random > 0.3 && legalActions.includes('Steal')) actionType = 'Steal';
-          else if (legalActions.includes('Foreign Aid')) actionType = 'Foreign Aid';
-          else actionType = 'Income';
+          if (random > 0.6) actionType = 'Tax';
+          else if (random > 0.3) actionType = 'Steal';
+          else actionType = 'Foreign Aid';
         }
       }
 

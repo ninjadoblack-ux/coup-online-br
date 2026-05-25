@@ -128,7 +128,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
       
       <div className="text-center space-y-4 w-full">
-        <h2 className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-black">Room Interface // Protocol Activated</h2>
+        <h2 className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-black">Interface de Sala // Protocolo Ativado</h2>
         <div 
           className="relative inline-flex items-center gap-6 bg-slate-950/80 border-2 border-slate-800 px-12 py-6 rounded-[2.5rem] cursor-pointer hover:border-purple-500/50 transition-all group overflow-hidden shadow-2xl"
           onClick={copyCode}

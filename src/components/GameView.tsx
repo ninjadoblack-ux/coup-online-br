@@ -518,12 +518,12 @@ export const GameView: React.FC<GameViewProps> = ({
       {/* Bottom Interface - Player Panel */}
       <div className="bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 p-3 sm:p-6 z-20 relative">
         {/* Emote Picker */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-2 bg-slate-900/80 backdrop-blur-md p-2 rounded-2xl border border-slate-800/50 shadow-2xl z-30">
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2 bg-slate-950/90 backdrop-blur-xl p-2 rounded-2xl border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.2)] z-30 ring-1 ring-white/10">
           {EMOTES.map(emote => (
             <button 
               key={emote}
               onClick={() => handleSendEmote(emote)}
-              className="text-xl hover:scale-125 transition-transform active:scale-95 px-1"
+              className="text-xl sm:text-2xl hover:scale-125 transition-all active:scale-90 px-1 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
             >
               {emote}
             </button>

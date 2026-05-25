@@ -49,14 +49,16 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
         user_id: null,
         name: nextName,
         is_host: false,
-        is_bot: true
+        is_bot: true,
+        bot_difficulty: selectedDifficulty
       }]);
-      toast.success(`${nextName} adicionado!`);
+      toast.success(`${nextName} (${selectedDifficulty}) adicionado!`);
     } catch (err) {
       console.error(err);
       toast.error("Erro ao adicionar robô.");
     }
   };
+
 
   const handleRemoveBot = async (botId: string) => {
     try {

@@ -414,11 +414,11 @@ export const GameView: React.FC<GameViewProps> = ({
               <div className="flex items-center justify-center gap-3 mb-8">
                 <Timer className={cn(
                   "w-5 h-5",
-                  timeLeft && timeLeft <= 3 ? "text-red-500 animate-bounce" : "text-slate-400"
+                  timeLeft && timeLeft <= 3 ? "text-red-500 animate-[bounce_0.5s_infinite]" : "text-slate-400"
                 )} />
                 <span className={cn(
                   "font-black uppercase tracking-[0.3em] text-xs transition-all",
-                  timeLeft && timeLeft <= 3 ? "text-red-500 scale-125" : "text-slate-500"
+                  timeLeft && timeLeft <= 3 ? "text-red-500 scale-125 animate-pulse" : "text-slate-500"
                 )}>
                    Reação Necessária // {timeLeft}s
                 </span>

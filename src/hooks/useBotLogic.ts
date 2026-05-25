@@ -44,9 +44,26 @@ export function useBotLogic(
     }
   }, [room?.current_turn_player_id, actions[0]?.id, isHost]); // Only run when turn changes or pending action changes
 
+  const sendBotEmote = async (botId: string, emote: string) => {
+    try {
+      await supabase.from('players').update({ 
+        current_emote: emote, 
+        emote_at: new Date().toISOString() 
+      }).eq('id', botId);
+    } catch (err) {
+      console.error('Error sending bot emote:', err);
+    }
+  };
+
   const handleBotTurn = async (bot: Player) => {
     thinkingRef.current[bot.id] = true;
     
+    // Bots occasionally emote at the start of their turn
+    if (Math.random() > 0.7) {
+      const emotes = ["🤔", "😈", "🔥", "🤫"];
+      sendBotEmote(bot.id, emotes[Math.floor(Math.random() * emotes.length)]);
+    }
+
     // 2 second "thinking" delay as requested
     await new Promise(resolve => setTimeout(resolve, 3000));
 

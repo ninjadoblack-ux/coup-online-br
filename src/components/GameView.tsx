@@ -53,22 +53,26 @@ export const GameView: React.FC<GameViewProps> = ({
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
-  const pendingAction = useMemo(() => actions.length > 0 ? actions[0] : null, [actions]);
+  const pendingAction = useMemo(() => actions.find(a => a.status === 'pending') || null, [actions]);
 
+  // Local 10s countdown that starts when the overlay first appears for this action,
+  // independent of server-side expires_at drift.
   useEffect(() => {
-    if (pendingAction?.expires_at) {
-      const interval = setInterval(() => {
-        const expires = new Date(pendingAction.expires_at!).getTime();
-        const now = new Date().getTime();
-        const diff = Math.max(0, Math.floor((expires - now) / 1000));
-        setTimeLeft(diff);
-        if (diff <= 0) clearInterval(interval);
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
+    if (!pendingAction) {
       setTimeLeft(null);
+      return;
     }
-  }, [pendingAction?.expires_at]);
+    const REACTION_SECONDS = 10;
+    setTimeLeft(REACTION_SECONDS);
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      const remaining = Math.max(0, REACTION_SECONDS - elapsed);
+      setTimeLeft(remaining);
+      if (remaining <= 0) clearInterval(interval);
+    }, 250);
+    return () => clearInterval(interval);
+  }, [pendingAction?.id]);
 
   const handleAction = useCallback(async (actionType: string, targetId: string | null = null) => {
     if (!myPlayer || !isMyTurn) return;

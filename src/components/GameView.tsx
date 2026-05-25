@@ -401,7 +401,7 @@ const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelec
   );
 });
 
-const ActionBtn = memo(({ action, disabled, isMyTurn, onClick }: any) => {
+const ActionBtn = memo(({ action, disabled, hasCard, isMyTurn, onClick }: any) => {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -421,8 +421,16 @@ const ActionBtn = memo(({ action, disabled, isMyTurn, onClick }: any) => {
       </TooltipTrigger>
       <TooltipContent className="bg-slate-900 border-slate-800 text-white p-3 max-w-xs rounded-xl shadow-2xl">
         <div className="space-y-1">
-          <p className="font-black text-xs uppercase tracking-widest text-purple-400">{ACTION_LABELS[action] || action}</p>
+          <div className="flex items-center justify-between">
+            <p className="font-black text-xs uppercase tracking-widest text-purple-400">{ACTION_LABELS[action] || action}</p>
+            {!hasCard && (
+              <span className="text-[8px] bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded font-black border border-red-500/30 uppercase">Carta Ausente</span>
+            )}
+          </div>
           <p className="text-[10px] leading-relaxed text-slate-300 font-medium">{ACTION_DESCRIPTIONS[action]}</p>
+          {!hasCard && (
+            <p className="text-[9px] text-red-400 font-bold uppercase mt-2">Você precisa da carta de {ACTION_REQUIRED_CARDS[action]} para esta ação.</p>
+          )}
         </div>
       </TooltipContent>
     </Tooltip>

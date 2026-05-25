@@ -46,6 +46,8 @@ export const GameView: React.FC<GameViewProps> = ({
 }) => {
   const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isClashing, setIsClashing] = useState(false);
+  const [clashActors, setClashActors] = useState<{ challenger: Player; victim: Player } | null>(null);
 
   // Game Engine & Bot Logic Hooks (Host only)
   useBotLogic(room, players, myPlayer, actions, allCards);
@@ -54,6 +56,31 @@ export const GameView: React.FC<GameViewProps> = ({
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
   const pendingAction = useMemo(() => actions.find(a => ['pending', 'blocking'].includes(a.status)) || null, [actions]);
+
+  // Handle clash detection
+  useEffect(() => {
+    const activeChallenge = actions.find(a => ['challenged', 'block_challenged'].includes(a.status));
+    if (activeChallenge && !isClashing) {
+      const challenger = players.find(p => p.id === activeChallenge.challenger_id);
+      const victimId = activeChallenge.status === 'challenged' ? activeChallenge.player_id : activeChallenge.blocker_id;
+      const victim = players.find(p => p.id === victimId);
+      
+      if (challenger && victim) {
+        setClashActors({ challenger, victim });
+        setIsClashing(true);
+        const timer = setTimeout(() => setIsClashing(false), 2500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [actions, players, isClashing]);
+
+  // Screen shake animation variants
+  const shakeVariants = {
+    shake: {
+      x: [0, -10, 10, -10, 10, 0],
+      transition: { duration: 0.4 }
+    }
+  };
 
   // Local 10s countdown that starts when the overlay first appears for this action,
   // independent of server-side expires_at drift.
@@ -189,6 +216,80 @@ export const GameView: React.FC<GameViewProps> = ({
     <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-slate-950 cyber-grid">
       <div className="scanline" />
       
+      {/* Clash Animation Overlay */}
+      <AnimatePresence>
+        {isClashing && clashActors && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-slate-950/90 backdrop-blur-xl flex items-center justify-center overflow-hidden"
+          >
+            <div className="absolute inset-0 flex items-center justify-center">
+               <motion.div 
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+                className="w-[300px] h-[300px] bg-red-500/20 rounded-full blur-3xl"
+               />
+            </div>
+
+            <div className="relative flex items-center justify-center w-full max-w-4xl px-4 gap-4 sm:gap-20">
+               {/* Challenger */}
+               <motion.div
+                initial={{ x: -300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ type: "spring", damping: 12 }}
+                className="flex flex-col items-center gap-4"
+               >
+                  <div className="w-24 h-24 sm:w-40 sm:h-40 rounded-3xl bg-gradient-to-br from-purple-500 to-purple-900 flex items-center justify-center shadow-[0_0_50px_rgba(168,85,247,0.5)] border-2 border-purple-400">
+                    <span className="text-4xl sm:text-6xl font-black text-white">{clashActors.challenger.name[0].toUpperCase()}</span>
+                  </div>
+                  <span className="text-lg sm:text-2xl font-black text-purple-400 uppercase tracking-widest">{clashActors.challenger.name}</span>
+                  <div className="px-4 py-1 bg-purple-500/20 border border-purple-500/40 rounded-full">
+                    <span className="text-[10px] font-black text-purple-300 uppercase">Contestador</span>
+                  </div>
+               </motion.div>
+
+               <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
+                transition={{ delay: 0.3 }}
+                className="text-6xl sm:text-9xl font-black text-red-600 italic drop-shadow-[0_0_20px_rgba(220,38,38,0.8)]"
+               >
+                 VS
+               </motion.div>
+
+               {/* Victim */}
+               <motion.div
+                initial={{ x: 300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ type: "spring", damping: 12 }}
+                className="flex flex-col items-center gap-4"
+               >
+                  <div className="w-24 h-24 sm:w-40 sm:h-40 rounded-3xl bg-gradient-to-br from-red-500 to-red-900 flex items-center justify-center shadow-[0_0_50px_rgba(239,68,68,0.5)] border-2 border-red-400">
+                    <span className="text-4xl sm:text-6xl font-black text-white">{clashActors.victim.name[0].toUpperCase()}</span>
+                  </div>
+                  <span className="text-lg sm:text-2xl font-black text-red-400 uppercase tracking-widest">{clashActors.victim.name}</span>
+                  <div className="px-4 py-1 bg-red-500/20 border border-red-500/40 rounded-full">
+                    <span className="text-[10px] font-black text-red-300 uppercase">Alvo</span>
+                  </div>
+               </motion.div>
+            </div>
+
+            <motion.div 
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="absolute bottom-20 flex flex-col items-center gap-2"
+            >
+              <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-[0.4em] animate-pulse">EMBATE NEURAL</h2>
+              <div className="h-1 w-64 bg-gradient-to-r from-transparent via-red-500 to-transparent" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header Info */}
       <div className="flex items-center justify-between p-3 sm:p-4 z-20">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -226,7 +327,11 @@ export const GameView: React.FC<GameViewProps> = ({
 
       {/* Main Table Area */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 relative">
-        <div className="w-full max-w-2xl aspect-[2/1] rounded-[100px] sm:rounded-[200px] border-[1px] border-slate-800 bg-gradient-to-b from-slate-900/20 to-slate-950/40 relative shadow-2xl flex flex-col items-center justify-center group overflow-hidden">
+        <motion.div 
+          variants={shakeVariants}
+          animate={isClashing ? "shake" : "default"}
+          className="w-full max-w-2xl aspect-[2/1] rounded-[100px] sm:rounded-[200px] border-[1px] border-slate-800 bg-gradient-to-b from-slate-900/20 to-slate-950/40 relative shadow-2xl flex flex-col items-center justify-center group overflow-hidden"
+        >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_oklch(0.5_0.2_280_/_0.03),_transparent)]" />
           
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
@@ -281,7 +386,7 @@ export const GameView: React.FC<GameViewProps> = ({
               </div>
             </ScrollArea>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Action Overlay (Reaction) */}
@@ -296,13 +401,25 @@ export const GameView: React.FC<GameViewProps> = ({
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="bg-slate-900 border-2 border-red-500/50 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 max-w-md w-full shadow-[0_0_50px_rgba(239,68,68,0.2)] text-center relative overflow-hidden"
+              className={cn(
+                "bg-slate-900 border-2 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 max-w-md w-full shadow-[0_0_50px_rgba(239,68,68,0.2)] text-center relative overflow-hidden transition-colors duration-300",
+                timeLeft && timeLeft <= 3 ? "border-red-500 animate-pulse bg-red-950/20" : "border-slate-800"
+              )}
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent" />
+              <div className={cn(
+                "absolute top-0 left-0 w-full h-1 bg-gradient-to-r",
+                timeLeft && timeLeft <= 3 ? "from-transparent via-red-500 to-transparent" : "from-transparent via-slate-500 to-transparent"
+              )} />
               
               <div className="flex items-center justify-center gap-3 mb-8">
-                <Timer className="w-5 h-5 text-red-500 animate-pulse" />
-                <span className="text-red-500 font-black uppercase tracking-[0.3em] text-xs">
+                <Timer className={cn(
+                  "w-5 h-5",
+                  timeLeft && timeLeft <= 3 ? "text-red-500 animate-[bounce_0.5s_infinite]" : "text-slate-400"
+                )} />
+                <span className={cn(
+                  "font-black uppercase tracking-[0.3em] text-xs transition-all",
+                  timeLeft && timeLeft <= 3 ? "text-red-500 scale-125 animate-pulse" : "text-slate-500"
+                )}>
                    Reação Necessária // {timeLeft}s
                 </span>
               </div>
@@ -326,7 +443,12 @@ export const GameView: React.FC<GameViewProps> = ({
                 {(pendingAction.status === 'blocking' || pendingAction.player_id !== myPlayer?.id) && (
                   <Button 
                     size="lg"
-                    className="h-14 sm:h-16 bg-red-600 hover:bg-red-500 font-black text-lg sm:text-xl rounded-2xl shadow-lg shadow-red-900/20 border-t border-red-400/30"
+                    className={cn(
+                      "h-14 sm:h-16 font-black text-lg sm:text-xl rounded-2xl shadow-lg border-t transition-all",
+                      timeLeft && timeLeft <= 3 
+                        ? "bg-red-500 hover:bg-red-400 border-red-300 shadow-red-500/50 scale-105" 
+                        : "bg-red-600 hover:bg-red-500 border-red-400/30 shadow-red-900/20"
+                    )}
                     onClick={() => handleReaction('challenge')}
                   >
                     CONTESTAR!

@@ -43,90 +43,99 @@ export const GameCard: React.FC<GameCardProps> = memo(({
   className,
   compact = false,
 }) => {
-  if (!isRevealed) {
-    return (
-      <motion.div
-        whileHover={isSelectable ? { scale: 1.05, y: -10 } : {}}
-        onClick={isSelectable ? onClick : undefined}
-        className={cn(
-          "relative w-20 h-30 xs:w-24 xs:h-36 md:w-32 md:h-48 rounded-[1.2rem] xs:rounded-[1.5rem] border-2 border-slate-800 bg-slate-950 overflow-hidden cursor-default shadow-2xl group",
-          isSelectable && "cursor-pointer border-purple-500/50 hover:border-purple-400",
-          isSelected && "ring-4 ring-purple-500 border-purple-400 scale-105",
-          compact && "w-14 h-20 xs:w-16 xs:h-24 md:w-20 md:h-30 rounded-xl",
-          className
-        )}
-      >
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://i.pinimg.com/736x/63/6f/0c/636f0c08a66f7b07a21e4016fb049d67.jpg" 
-            alt="Card Back" 
-            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-slate-950/20" />
-        </div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/10 flex items-center justify-center relative bg-black/20 backdrop-blur-sm">
-             <div className="absolute inset-0 border border-purple-500/20 rounded-full animate-[spin_10s_linear_infinite]" />
-             <span className="text-4xl font-black text-white/20 tracking-tighter italic group-hover:text-purple-500/40 transition-colors">C</span>
-          </div>
-        </div>
-        <div className="absolute bottom-2 inset-x-0 flex justify-center opacity-30 z-10">
-           <span className="text-[6px] font-black uppercase tracking-[0.4em] text-white">Protocolo Neural Ativo</span>
-        </div>
-      </motion.div>
-    );
-  }
-
   const image = type ? cardImages[type] : null;
   const colorClass = type ? cardColors[type] : "";
 
   return (
-    <motion.div
-      initial={{ rotateY: 90, opacity: 0 }}
-      animate={{ rotateY: 0, opacity: 1 }}
+    <div 
       className={cn(
-        "relative w-20 h-30 xs:w-24 xs:h-36 md:w-32 md:h-48 rounded-[1.2rem] xs:rounded-[1.5rem] border-2 bg-slate-950 flex flex-col items-center justify-between transition-all shadow-2xl overflow-hidden group",
-        colorClass,
-        compact && "w-14 h-20 xs:w-16 xs:h-24 md:w-20 md:h-30 rounded-xl",
+        "relative perspective-1000",
+        compact ? "w-14 h-20 xs:w-16 xs:h-24 md:w-20 md:h-30" : "w-20 h-30 xs:w-24 xs:h-36 md:w-32 md:h-48",
         className
       )}
+      onClick={isSelectable ? onClick : undefined}
     >
-      {/* Background Image */}
-      {image && (
-        <div className="absolute inset-0 z-0">
-          <img 
-            src={image} 
-            alt={type} 
-            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/20" />
+      <motion.div
+        initial={false}
+        animate={{ rotateY: isRevealed ? 0 : 180 }}
+        transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
+        style={{ transformStyle: "preserve-3d" }}
+        className="w-full h-full relative"
+      >
+        {/* Front Side (Revealed) */}
+        <div 
+          className={cn(
+            "absolute inset-0 w-full h-full backface-hidden rounded-[1.2rem] xs:rounded-[1.5rem] border-2 bg-slate-950 flex flex-col items-center justify-between transition-all shadow-2xl overflow-hidden group",
+            colorClass,
+            compact && "rounded-xl"
+          )}
+        >
+          {image && (
+            <div className="absolute inset-0 z-0">
+              <img 
+                src={image} 
+                alt={type} 
+                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/20" />
+            </div>
+          )}
+
+          <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-10" />
+          
+          <div className="flex flex-col items-center gap-1 z-10 pt-4">
+            <span className={cn(
+              "text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white drop-shadow-lg", 
+              compact && "text-[8px] tracking-widest pt-2"
+            )}>
+              {type ? CARD_LABELS[type] : ""}
+            </span>
+            <div className="w-8 h-[1px] bg-white/40" />
+          </div>
+
+          <div className="flex flex-col items-center gap-2 z-10 w-full pb-4">
+            <div className="w-full flex justify-center items-center gap-1 px-4">
+               <div className="h-[1px] flex-1 bg-white/20" />
+               <div className="px-2 py-0.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-sm">
+                  <span className={cn("text-[8px] font-black text-white uppercase tracking-tighter", compact && "hidden")}>
+                    Unidade Ativa
+                  </span>
+               </div>
+               <div className="h-[1px] flex-1 bg-white/20" />
+             </div>
+          </div>
         </div>
-      )}
 
-      <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-10" />
-      
-      <div className="flex flex-col items-center gap-1 z-10 pt-4">
-        <span className={cn(
-          "text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white drop-shadow-lg", 
-          compact && "text-[8px] tracking-widest pt-2"
-        )}>
-          {type ? CARD_LABELS[type] : ""}
-        </span>
-        <div className="w-8 h-[1px] bg-white/40" />
-      </div>
-
-      <div className="flex flex-col items-center gap-2 z-10 w-full pb-4">
-        <div className="w-full flex justify-center items-center gap-1 px-4">
-           <div className="h-[1px] flex-1 bg-white/20" />
-           <div className="px-2 py-0.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-sm">
-              <span className={cn("text-[8px] font-black text-white uppercase tracking-tighter", compact && "hidden")}>
-                Unidade Ativa
-              </span>
-           </div>
-           <div className="h-[1px] flex-1 bg-white/20" />
-         </div>
-      </div>
-    </motion.div>
+        {/* Back Side (Hidden) */}
+        <div 
+          className={cn(
+            "absolute inset-0 w-full h-full backface-hidden rounded-[1.2rem] xs:rounded-[1.5rem] border-2 border-slate-800 bg-slate-950 overflow-hidden cursor-default shadow-2xl group",
+            isSelectable && "cursor-pointer border-purple-500/50 hover:border-purple-400",
+            isSelected && "ring-4 ring-purple-500 border-purple-400 scale-105",
+            compact && "rounded-xl"
+          )}
+          style={{ transform: "rotateY(180deg)" }}
+        >
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="https://i.pinimg.com/736x/63/6f/0c/636f0c08a66f7b07a21e4016fb049d67.jpg" 
+              alt="Card Back" 
+              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-slate-950/20" />
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/10 flex items-center justify-center relative bg-black/20 backdrop-blur-sm">
+               <div className="absolute inset-0 border border-purple-500/20 rounded-full animate-[spin_10s_linear_infinite]" />
+               <span className="text-4xl font-black text-white/20 tracking-tighter italic group-hover:text-purple-500/40 transition-colors">C</span>
+            </div>
+          </div>
+          <div className="absolute bottom-2 inset-x-0 flex justify-center opacity-30 z-10">
+             <span className="text-[6px] font-black uppercase tracking-[0.4em] text-white">Protocolo Neural Ativo</span>
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 });
 

@@ -17,6 +17,8 @@ export type Database = {
       game_actions: {
         Row: {
           action_type: string
+          blocker_id: string | null
+          challenger_id: string | null
           created_at: string | null
           expires_at: string | null
           id: string
@@ -27,6 +29,8 @@ export type Database = {
         }
         Insert: {
           action_type: string
+          blocker_id?: string | null
+          challenger_id?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
@@ -37,6 +41,8 @@ export type Database = {
         }
         Update: {
           action_type?: string
+          blocker_id?: string | null
+          challenger_id?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
@@ -46,6 +52,20 @@ export type Database = {
           target_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "game_actions_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_actions_challenger_id_fkey"
+            columns: ["challenger_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "game_actions_player_id_fkey"
             columns: ["player_id"]

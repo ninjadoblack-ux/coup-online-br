@@ -36,7 +36,8 @@ export const ACTION_LABELS: Record<string, string> = {
   'Exchange': 'Trocar',
   'Coup': 'Golpe de Estado',
   'Block': 'Bloquear',
-  'Challenge': 'Contestar'
+  'Challenge': 'Contestar',
+  'Challenge Block': 'Contestar Bloqueio'
 };
 
 export const CARD_LABELS: Record<string, string> = {
@@ -65,4 +66,10 @@ export const ACTION_REQUIRED_CARDS: Record<string, CardType | null> = {
   'Assassinate': 'Assassin',
   'Exchange': 'Ambassador',
   'Coup': null
+};
+
+export const BLOCKABLE_ACTIONS: Record<string, CardType[]> = {
+  'Foreign Aid': ['Duke'],
+  'Steal': ['Captain', 'Ambassador'],
+  'Assassinate': ['Contessa']
 };

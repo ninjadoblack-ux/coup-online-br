@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, Player, GameAction, PlayerCard } from '@/types/game';
-import { ACTION_LABELS, ACTION_REQUIRED_CARDS } from '@/lib/game-logic';
+import { ACTION_LABELS, ACTION_REQUIRED_CARDS, BLOCKABLE_ACTIONS } from '@/lib/game-logic';
 
 export function useBotLogic(
   room: Room | null,
@@ -29,7 +29,7 @@ export function useBotLogic(
     }
 
     // 2. Bot needs to react to an action
-    if (pendingAction && pendingAction.status === 'pending') {
+    if (pendingAction && (pendingAction.status === 'pending' || pendingAction.status === 'blocking')) {
       const actionId = pendingAction.id;
       
       // Bots react to other players' actions
@@ -157,40 +157,66 @@ export function useBotLogic(
     thinkingRef.current[reactionKey] = true;
 
     // Bots take some time to "decide"
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 3000));
 
     try {
-      // Difficulty-based reaction
-      const isBasic = ['Income', 'Foreign Aid', 'Coup'].includes(action.action_type);
+      // Re-fetch action to see if it was already resolved
+      const { data: currentAction } = await supabase.from('game_actions').select('status').eq('id', action.id).single();
+      if (!currentAction || (currentAction.status !== 'pending' && currentAction.status !== 'blocking')) return;
+
       const difficulty = bot.bot_difficulty || 'moderate';
       
-      let challengeProb = 0.15; // Moderate default
-      if (difficulty === 'easy') challengeProb = 0.05;
-      if (difficulty === 'hard') challengeProb = 0.30;
+      let challengeProb = 0.15;
+      let blockProb = 0.2;
+      if (difficulty === 'easy') { challengeProb = 0.05; blockProb = 0.1; }
+      if (difficulty === 'hard') { challengeProb = 0.35; blockProb = 0.4; }
 
-      const shouldChallenge = !isBasic && Math.random() < challengeProb;
-
-
-      if (shouldChallenge) {
-        await supabase
-          .from('game_actions')
-          .update({ status: 'challenged' })
-          .eq('id', action.id);
+      if (action.status === 'pending') {
+        const isTarget = action.target_id === bot.id;
+        const canBlock = !!BLOCKABLE_ACTIONS[action.action_type];
         
-        await supabase.from('game_logs').insert([{
-          room_id: room!.id,
-          message: `${bot.name} CONTESTOU ${players.find(p => p.id === action.player_id)?.name}!`
-        }]);
-      } else {
-        // Bot allows the action
-        await supabase.from('game_logs').insert([{
-          room_id: room!.id,
-          message: `${bot.name} permitiu a ação.`
-        }]);
+        // Higher probability to challenge/block if they are the target
+        const finalChallengeProb = isTarget ? challengeProb * 1.5 : challengeProb;
+        const finalBlockProb = isTarget ? blockProb * 2 : blockProb;
+
+        if (Math.random() < finalChallengeProb) {
+          await supabase.from('game_actions').update({ 
+            status: 'challenged',
+            challenger_id: bot.id 
+          }).eq('id', action.id);
+          
+          await supabase.from('game_logs').insert([{
+            room_id: room!.id,
+            message: `${bot.name} CONTESTOU ${players.find(p => p.id === action.player_id)?.name}!`
+          }]);
+        } else if (canBlock && Math.random() < finalBlockProb) {
+          await supabase.from('game_actions').update({ 
+            status: 'blocking',
+            blocker_id: bot.id,
+            expires_at: new Date(Date.now() + 12000).toISOString()
+          }).eq('id', action.id);
+          
+          await supabase.from('game_logs').insert([{
+            room_id: room!.id,
+            message: `${bot.name} anunciou BLOQUEIO contra ${players.find(p => p.id === action.player_id)?.name}!`
+          }]);
+        }
+      } else if (action.status === 'blocking' && action.player_id === bot.id) {
+        // The bot's own action was blocked! They might challenge the block.
+        if (Math.random() < challengeProb) {
+          await supabase.from('game_actions').update({ 
+            status: 'block_challenged',
+            challenger_id: bot.id 
+          }).eq('id', action.id);
+          
+          await supabase.from('game_logs').insert([{
+            room_id: room!.id,
+            message: `${bot.name} CONTESTOU o bloqueio!`
+          }]);
+        }
       }
     } catch (err) {
       console.error('Error in bot reaction:', err);
     }
-    // No need to clear reactionKey as the action will be resolved/deleted
   };
 }

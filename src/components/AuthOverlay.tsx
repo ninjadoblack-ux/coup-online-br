@@ -57,7 +57,7 @@ export const AuthOverlay: React.FC = () => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-md bg-slate-900 border-2 border-slate-800 p-10 rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden"
+        className="w-full max-w-md bg-slate-900 border-2 border-slate-800 p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden"
       >
         <AnimatePresence>
           {loading && (
@@ -80,11 +80,11 @@ export const AuthOverlay: React.FC = () => {
 
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
         
-        <div className="text-center mb-10">
-           <div className="w-16 h-16 bg-purple-600/20 border border-purple-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl font-black text-purple-500">C</span>
+        <div className="text-center mb-6 sm:mb-10">
+           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-600/20 border border-purple-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl sm:text-3xl font-black text-purple-500">C</span>
            </div>
-           <h2 className="text-4xl font-black text-white uppercase tracking-tighter">
+           <h2 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tighter">
             {isLogin ? "Identificação" : "Nova Conta"}
           </h2>
           <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mt-1">Sincronização Requerida</p>
@@ -115,7 +115,7 @@ export const AuthOverlay: React.FC = () => {
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button 
-              className="w-full h-16 bg-purple-600 hover:bg-purple-500 font-black text-xl rounded-2xl shadow-lg shadow-purple-900/20 border-t border-purple-400/30 mt-4"
+              className="w-full h-14 sm:h-16 bg-purple-600 hover:bg-purple-500 font-black text-lg sm:text-xl rounded-2xl shadow-lg shadow-purple-900/20 border-t border-purple-400/30 mt-4"
               disabled={loading}
             >
               {loading ? "PROCESSANDO..." : (isLogin ? "CONECTAR" : "REGISTRAR")}

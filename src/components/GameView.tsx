@@ -210,7 +210,20 @@ export const GameView: React.FC<GameViewProps> = ({
       console.error(err);
       toast.error("Erro ao reagir.");
     }
-  }, [pendingAction, myPlayer, room.id, players]);
+  const handleSendEmote = useCallback(async (emote: string) => {
+    if (!myPlayer) return;
+    try {
+      await supabase
+        .from('players')
+        .update({ 
+          current_emote: emote, 
+          emote_at: new Date().toISOString() 
+        })
+        .eq('id', myPlayer.id);
+    } catch (err) {
+      console.error("Error sending emote:", err);
+    }
+  }, [myPlayer]);
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col bg-slate-950 cyber-grid">

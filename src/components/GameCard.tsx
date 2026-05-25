@@ -71,7 +71,7 @@ export const GameCard: React.FC<GameCardProps> = ({
           </div>
         </div>
         <div className="absolute bottom-2 inset-x-0 flex justify-center opacity-30 z-10">
-           <span className="text-[6px] font-black uppercase tracking-[0.4em] text-white">Neural Protocol Active</span>
+           <span className="text-[6px] font-black uppercase tracking-[0.4em] text-white">Protocolo Neural Ativo</span>
         </div>
       </motion.div>
     );

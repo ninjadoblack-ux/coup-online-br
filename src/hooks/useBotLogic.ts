@@ -202,9 +202,10 @@ export function useBotLogic(
         const finalChallengeProb = isTarget ? challengeProb * 1.5 : challengeProb;
         const finalBlockProb = isTarget ? blockProb * 2 : blockProb;
 
-        if (Math.random() < finalChallengeProb) {
-          await supabase.from('game_actions').update({ 
-            status: 'challenged',
+          if (Math.random() < finalChallengeProb) {
+            sendBotEmote(bot.id, "😈");
+            await supabase.from('game_actions').update({ 
+              status: 'challenged',
             challenger_id: bot.id 
           }).eq('id', action.id);
           

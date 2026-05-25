@@ -176,6 +176,12 @@ export function useBotLogic(
     // Bots take some time to "decide"
     await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 3000));
 
+    // Bots occasionally emote when they are targeted or reacting
+    if (Math.random() > 0.6) {
+      const emotes = ["👁️", "💧", "🤡", "🤫"];
+      sendBotEmote(bot.id, emotes[Math.floor(Math.random() * emotes.length)]);
+    }
+
     try {
       // Re-fetch action to see if it was already resolved
       const { data: currentAction } = await supabase.from('game_actions').select('status').eq('id', action.id).single();

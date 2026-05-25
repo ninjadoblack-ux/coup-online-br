@@ -78,6 +78,7 @@ export const GameContainer: React.FC = () => {
       myCards={myCards} 
       actions={actions} 
       logs={logs} 
+      onLeaveRoom={handleLeaveRoom}
     />
   );
 };

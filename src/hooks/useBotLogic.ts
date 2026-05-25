@@ -118,7 +118,7 @@ export function useBotLogic(
 
       await supabase.from('game_logs').insert([{
         room_id: room!.id,
-        message: `${bot.name} anunciou ${actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
+        message: `${bot.name} anunciou ${ACTION_LABELS[actionType] || actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
       }]);
 
     } catch (err) {

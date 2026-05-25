@@ -37,7 +37,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
       if (error) throw error;
       
       // Add creator as player
-      const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', user.id).single();
+      const { data: profileData } = await (supabase.from('profiles') as any).select('display_name').eq('id', user.id).single();
+      const profile = profileData as { display_name: string | null } | null;
       
       await supabase.from('players').insert([{
         room_id: room.id,

@@ -23,37 +23,37 @@ const tutorialSteps: TutorialStep[] = [
   {
     title: "Bem-vindo ao Coup Online",
     content: "Você está prestes a entrar em um mundo de intriga, blefe e traição. Coup é um jogo de dedução onde seu objetivo é ser o último sobrevivente na mesa.",
-    icon: <Users className="w-12 h-12" />,
+    icon: <Users />,
     color: "bg-purple-600"
   },
   {
     title: "Cartas e Influência",
     content: "Cada jogador começa com 2 cartas viradas para baixo. Cada carta representa um personagem com poderes únicos. Se você perder uma influência (carta), deve revelá-la. Perdeu as duas? Você está fora!",
-    icon: <BookOpen className="w-12 h-12" />,
+    icon: <BookOpen />,
     color: "bg-blue-600"
   },
   {
     title: "Ações do Jogo",
     content: "No seu turno, você pode escolher uma ação: Renda (1 moeda), Ajuda Externa (2 moedas) ou Golpe de Estado (7 moedas). O Golpe elimina uma influência de um adversário instantaneamente.",
-    icon: <Coins className="w-12 h-12" />,
+    icon: <Coins />,
     color: "bg-yellow-600"
   },
   {
     title: "Personagens e Poderes",
     content: "Duque: Pega 3 moedas (Taxa). Assassino: Paga 3 moedas para eliminar alguém. Capitão: Rouba 2 moedas. Embaixador: Troca cartas. Condessa: Bloqueia assassinatos.",
-    icon: <Sword className="w-12 h-12" />,
+    icon: <Sword />,
     color: "bg-red-600"
   },
   {
     title: "A Arte do Blefe",
     content: "O segredo? Você pode declarar QUALQUER ação, mesmo sem ter a carta! Mas cuidado: se alguém te contestar e você estiver mentindo, perde uma carta. Se você falar a verdade, quem contestou perde uma!",
-    icon: <Shield className="w-12 h-12" />,
+    icon: <Shield />,
     color: "bg-green-600"
   },
   {
     title: "Bloqueios",
     content: "Algumas ações podem ser bloqueadas por outros personagens. O Duque bloqueia Ajuda Externa. O Capitão ou Embaixador bloqueiam Roubos. A Condessa bloqueia o Assassino.",
-    icon: <Shield className="w-12 h-12" />,
+    icon: <Shield />,
     color: "bg-indigo-600"
   }
 ];
@@ -125,7 +125,7 @@ export const TutorialDialog: React.FC = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[500px] bg-slate-950 border-purple-500/30 text-white overflow-hidden">
+      <DialogContent className="w-[95%] sm:max-w-[500px] bg-slate-950 border-purple-500/30 text-white overflow-hidden rounded-[2rem]">
         <DialogHeader>
           <div className="flex justify-between items-center mb-4">
             <span className="text-xs font-bold text-purple-400 uppercase tracking-widest">
@@ -140,12 +140,12 @@ export const TutorialDialog: React.FC = () => {
               ))}
             </div>
           </div>
-          <DialogTitle className="text-2xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-400">
+          <DialogTitle className="text-xl sm:text-2xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-400">
             {step.title}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="py-8 flex flex-col items-center text-center gap-6">
+        <div className="py-4 sm:py-8 flex flex-col items-center text-center gap-4 sm:gap-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
@@ -155,7 +155,7 @@ export const TutorialDialog: React.FC = () => {
               transition={{ type: "spring", duration: 0.5 }}
               className={`p-6 rounded-3xl ${step.color} shadow-[0_0_30px_rgba(0,0,0,0.5)]`}
             >
-              {step.icon}
+              {React.cloneElement(step.icon as React.ReactElement<any>, { className: "w-8 h-8 sm:w-12 sm:h-12" })}
             </motion.div>
           </AnimatePresence>
 
@@ -165,14 +165,14 @@ export const TutorialDialog: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="text-slate-300 text-lg leading-relaxed font-medium"
+              className="text-slate-300 text-base sm:text-lg leading-relaxed font-medium"
             >
               {step.content}
             </motion.p>
           </AnimatePresence>
         </div>
 
-        <DialogFooter className="flex flex-row justify-between sm:justify-between items-center gap-4">
+        <DialogFooter className="flex flex-row justify-between items-center gap-2 sm:gap-4 mt-4">
           <Button
             variant="ghost"
             onClick={handleBack}
@@ -184,7 +184,7 @@ export const TutorialDialog: React.FC = () => {
           
           <Button
             onClick={handleNext}
-            className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-8 shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+            className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 sm:px-8 shadow-[0_0_15px_rgba(168,85,247,0.4)]"
           >
             {currentStep === tutorialSteps.length - 1 ? (
               <>Começar <Check className="ml-2 h-4 w-4" /></>

@@ -124,18 +124,18 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-2xl mx-auto gap-12 px-4 py-12 min-h-screen relative">
+    <div className="flex flex-col items-center w-full max-w-2xl mx-auto gap-8 md:gap-12 px-4 py-8 md:py-12 min-h-screen relative">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
       
       <div className="text-center space-y-4 w-full">
         <h2 className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-black">Interface de Sala // Protocolo Ativado</h2>
         <div 
-          className="relative inline-flex items-center gap-6 bg-slate-950/80 border-2 border-slate-800 px-12 py-6 rounded-[2.5rem] cursor-pointer hover:border-purple-500/50 transition-all group overflow-hidden shadow-2xl"
+          className="relative inline-flex items-center gap-4 md:gap-6 bg-slate-950/80 border-2 border-slate-800 px-6 md:px-12 py-4 md:py-6 rounded-[2rem] md:rounded-[2.5rem] cursor-pointer hover:border-purple-500/50 transition-all group overflow-hidden shadow-2xl"
           onClick={copyCode}
         >
           <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="flex flex-col items-center">
-             <span className="text-6xl font-black tracking-[0.2em] text-white group-hover:scale-105 transition-transform drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+             <span className="text-4xl md:text-6xl font-black tracking-[0.2em] text-white group-hover:scale-105 transition-transform drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
               {room.code}
             </span>
             <span className="text-[10px] text-slate-500 font-bold mt-2 group-hover:text-purple-400 transition-colors uppercase tracking-widest">Clique para copiar</span>
@@ -146,7 +146,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
         </div>
       </div>
 
-      <div className="w-full glass-card rounded-[2.5rem] p-8 relative overflow-hidden">
+      <div className="w-full glass-card rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4">
            <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-800">
              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -159,7 +159,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
             <Users className="w-6 h-6 text-purple-500" />
           </div>
           <div>
-            <h3 className="text-2xl font-black uppercase tracking-tighter text-white">Jogadores</h3>
+            <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-white">Jogadores</h3>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{players.length} de 6 conectados</p>
           </div>
         </div>
@@ -175,19 +175,19 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: "spring", damping: 20, stiffness: 300 }}
                 className={cn(
-                  "flex items-center gap-4 bg-slate-900/50 p-5 rounded-3xl border transition-all relative group",
+                  "flex items-center gap-3 sm:gap-4 bg-slate-900/50 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-3xl border transition-all relative group",
                   player.is_bot ? 'border-purple-500/30 shadow-[inset_0_0_20px_rgba(168,85,247,0.05)]' : 'border-slate-800 hover:border-slate-700'
                 )}
               >
                 <div className={cn(
-                  "w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg transition-transform group-hover:scale-110",
+                  "w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg transition-transform group-hover:scale-110",
                   player.is_bot ? 'bg-gradient-to-br from-purple-500 to-purple-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'
                 )}>
-                  {player.is_bot ? <Bot className="w-8 h-8 text-white" /> : player.name[0].toUpperCase()}
+                  {player.is_bot ? <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" /> : player.name[0].toUpperCase()}
                 </div>
                 <div className="flex flex-col flex-1">
                   <span className={cn(
-                    "font-black text-lg tracking-tight truncate max-w-[120px]",
+                    "font-black text-base sm:text-lg tracking-tight truncate max-w-[120px]",
                     player.is_bot ? 'text-purple-300' : 'text-white'
                   )}>{player.name}</span>
                   <div className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 size="lg"
-                className="w-full h-20 text-2xl font-black rounded-3xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.4)] transition-all border-t border-purple-400/50 disabled:opacity-50 disabled:grayscale"
+                className="w-full h-16 sm:h-20 text-xl sm:text-2xl font-black rounded-[1.5rem] sm:rounded-3xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.4)] transition-all border-t border-purple-400/50 disabled:opacity-50 disabled:grayscale"
                 onClick={handleStartGame}
                 disabled={!canStart}
               >

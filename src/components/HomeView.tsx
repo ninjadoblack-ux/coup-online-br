@@ -115,7 +115,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] gap-16 px-4 relative cyber-grid">
+    <div className="flex flex-col items-center justify-center min-h-[100dvh] gap-8 md:gap-16 px-4 relative cyber-grid">
       <div className="scanline" />
       
       <div className="absolute top-4 right-4 z-20">
@@ -139,9 +139,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
         className="text-center relative"
       >
         <div className="absolute -inset-x-20 -inset-y-10 bg-purple-500/10 blur-[100px] rounded-full pointer-events-none" />
-        <h1 className="text-7xl md:text-9xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-purple-300 to-purple-800 drop-shadow-[0_0_25px_rgba(168,85,247,0.4)] relative">
+        <h1 className="text-6xl sm:text-7xl md:text-9xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-purple-300 to-purple-800 drop-shadow-[0_0_25px_rgba(168,85,247,0.4)] relative">
           COUP
-          <span className="block text-4xl md:text-5xl mt-[-10px] non-italic tracking-[0.1em] font-light">ONLINE</span>
+          <span className="block text-3xl sm:text-4xl md:text-5xl mt-[-5px] md:mt-[-10px] non-italic tracking-[0.1em] font-light">ONLINE</span>
         </h1>
         <div className="mt-8 flex items-center justify-center gap-4">
           <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-slate-700" />
@@ -158,7 +158,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 size="lg"
-                className="w-full h-16 text-xl font-black rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.3)] border-t border-purple-400/50 transition-all flex items-center justify-center gap-3"
+                className="w-full h-14 md:h-16 text-lg md:text-xl font-black rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.3)] border-t border-purple-400/50 transition-all flex items-center justify-center gap-3"
                 onClick={handleCreateRoom}
                 disabled={loading}
               >
@@ -170,7 +170,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full h-16 text-xl font-black rounded-2xl border-2 border-slate-800 bg-slate-950/50 backdrop-blur-md text-slate-300 hover:border-purple-500/50 hover:text-purple-400 transition-all flex items-center justify-center gap-3"
+                className="w-full h-14 md:h-16 text-lg md:text-xl font-black rounded-2xl border-2 border-slate-800 bg-slate-950/50 backdrop-blur-md text-slate-300 hover:border-purple-500/50 hover:text-purple-400 transition-all flex items-center justify-center gap-3"
                 onClick={() => setIsJoining(true)}
                 disabled={loading}
               >
@@ -182,13 +182,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex flex-col gap-6 bg-slate-950/50 p-8 rounded-[2rem] border border-slate-800 shadow-2xl backdrop-blur-xl"
+            className="flex flex-col gap-6 bg-slate-950/50 p-6 md:p-8 rounded-[2rem] border border-slate-800 shadow-2xl backdrop-blur-xl"
           >
             <div className="space-y-2">
               <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest ml-1">Inserir Código</label>
               <Input
                 placeholder="00000"
-                className="h-20 text-4xl font-black text-center tracking-[0.3em] uppercase border-2 border-slate-800 bg-slate-900/50 rounded-2xl focus-visible:ring-purple-500 transition-all"
+                className="h-16 md:h-20 text-3xl md:text-4xl font-black text-center tracking-[0.3em] uppercase border-2 border-slate-800 bg-slate-900/50 rounded-2xl focus-visible:ring-purple-500 transition-all"
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 maxLength={5}

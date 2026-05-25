@@ -34,22 +34,31 @@ export const GameView: React.FC<GameViewProps> = ({
   const isMyTurn = room.current_turn_player_id === myPlayer?.id;
   const pendingAction = actions.length > 0 ? actions[0] : null;
 
-  const handleAction = async (actionType: string) => {
+  const handleAction = async (actionType: string, targetId: string | null = null) => {
     if (!myPlayer || !isMyTurn) return;
+
+    // Check if targeting is needed
+    if (['Assassinate', 'Steal', 'Coup'].includes(actionType) && !targetId) {
+      setIsSelectingTarget(actionType);
+      return;
+    }
 
     try {
       await supabase.from('game_actions').insert([{
         room_id: room.id,
         player_id: myPlayer.id,
+        target_id: targetId,
         action_type: actionType,
         status: 'pending',
-        expires_at: new Date(Date.now() + 10000).toISOString() // 10s timer
+        expires_at: new Date(Date.now() + 10000).toISOString()
       }]);
 
       await supabase.from('game_logs').insert([{
         room_id: room.id,
-        message: `${myPlayer.name} anunciou ${actionType}.`
+        message: `${myPlayer.name} anunciou ${actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
       }]);
+
+      setIsSelectingTarget(null);
 
     } catch (err) {
       console.error(err);

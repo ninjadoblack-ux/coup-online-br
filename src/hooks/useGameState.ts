@@ -133,5 +133,5 @@ export function useGameState(roomId: string | null) {
     };
   }, [roomId, myPlayer?.id]); // myPlayer.id is stable enough once set
 
-  return { room, players, myPlayer, myCards, actions, logs, loading };
+  return { room, players, myPlayer, myCards, allCards, actions, logs, loading };
 }

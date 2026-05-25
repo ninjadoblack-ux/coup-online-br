@@ -213,9 +213,10 @@ export function useBotLogic(
             room_id: room!.id,
             message: `${bot.name} CONTESTOU ${players.find(p => p.id === action.player_id)?.name}!`
           }]);
-        } else if (canBlock && Math.random() < finalBlockProb) {
-          await supabase.from('game_actions').update({ 
-            status: 'blocking',
+          } else if (canBlock && Math.random() < finalBlockProb) {
+            sendBotEmote(bot.id, "🤫");
+            await supabase.from('game_actions').update({ 
+              status: 'blocking',
             blocker_id: bot.id,
             expires_at: new Date(Date.now() + 12000).toISOString()
           }).eq('id', action.id);

@@ -126,6 +126,12 @@ export const GameView: React.FC<GameViewProps> = ({
       {/* Center Area - Game Log & Table State */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg aspect-video rounded-[100px] border-[10px] border-slate-800 bg-slate-900/30 relative flex flex-col items-center justify-center">
+          {isSelectingTarget && (
+            <div className="absolute inset-0 z-10 bg-black/40 rounded-[90px] flex flex-col items-center justify-center gap-4">
+               <h4 className="text-xl font-black text-red-500 uppercase tracking-widest">Selecione o Alvo</h4>
+               <Button variant="ghost" className="text-slate-400" onClick={() => setIsSelectingTarget(null)}>Cancelar</Button>
+            </div>
+          )}
           <div className="absolute top-4 flex items-center gap-2 text-yellow-500/50">
              <Coins className="w-6 h-6" />
              <span className="text-2xl font-black">BANCO</span>

@@ -56,9 +56,17 @@ export const GameContainer: React.FC = () => {
 
   if (roomId && loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
-        <span className="text-slate-400 font-bold tracking-widest uppercase text-xs">Carregando Sala...</span>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-slate-950 cyber-grid">
+        <div className="relative">
+          <div className="w-20 h-20 border-4 border-slate-900 border-t-purple-600 rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+             <div className="w-10 h-10 border-2 border-slate-800 border-b-purple-400 rounded-full animate-[spin_1s_linear_infinite_reverse]" />
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-white font-black tracking-[0.3em] uppercase text-sm">Sincronizando Rede</span>
+          <span className="text-slate-600 font-bold tracking-widest uppercase text-[10px] animate-pulse">Aguardando Resposta do Satélite...</span>
+        </div>
       </div>
     );
   }

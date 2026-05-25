@@ -115,17 +115,17 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-12 px-4 relative">
-      <div className="absolute top-4 right-4">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] gap-16 px-4 relative cyber-grid">
+      <div className="scanline" />
+      
+      <div className="absolute top-4 right-4 z-20">
         <Button
           variant="ghost"
           size="sm"
-          className="text-slate-500 hover:text-purple-400 gap-2 font-bold"
+          className="text-slate-500 hover:text-purple-400 gap-2 font-bold transition-all hover:bg-purple-500/10 rounded-full"
           onClick={() => {
-            // We can trigger it by clearing the localStorage or just calling the state if we exported it
-            // For now, let's just make it clear the DB flag or we can add a state here
             localStorage.setItem('force_show_tutorial', 'true');
-            window.location.reload(); // Simple way to re-trigger the check
+            window.location.reload();
           }}
         >
           <BookOpen className="w-4 h-4" /> REVER TUTORIAL
@@ -135,61 +135,77 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
       <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="text-center"
+        transition={{ type: "spring", duration: 1.2, bounce: 0.4 }}
+        className="text-center relative"
       >
-        <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-purple-400 to-purple-700 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">
-          COUP ONLINE
+        <div className="absolute -inset-x-20 -inset-y-10 bg-purple-500/10 blur-[100px] rounded-full pointer-events-none" />
+        <h1 className="text-7xl md:text-9xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-purple-300 to-purple-800 drop-shadow-[0_0_25px_rgba(168,85,247,0.4)] relative">
+          COUP
+          <span className="block text-4xl md:text-5xl mt-[-10px] non-italic tracking-[0.1em] font-light">ONLINE</span>
         </h1>
-        <p className="mt-4 text-slate-400 tracking-[0.3em] uppercase text-sm font-bold">
-          Blefe • Dedução • Dominação
-        </p>
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-slate-700" />
+          <p className="text-slate-500 tracking-[0.4em] uppercase text-[10px] md:text-xs font-black">
+            Blefe • Dedução • Dominação
+          </p>
+          <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-slate-700" />
+        </div>
       </motion.div>
 
-      <div className="flex flex-col gap-6 w-full max-w-sm">
+      <div className="flex flex-col gap-6 w-full max-w-sm z-10">
         {!isJoining ? (
-          <>
-            <Button
-              size="lg"
-              className="h-16 text-xl font-bold rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all hover:scale-105"
-              onClick={handleCreateRoom}
-              disabled={loading}
-            >
-              <Plus className="mr-2 h-6 w-6" /> CRIAR NOVA SALA
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-16 text-xl font-bold rounded-2xl border-purple-500/50 text-purple-400 hover:bg-purple-950/30 transition-all"
-              onClick={() => setIsJoining(true)}
-              disabled={loading}
-            >
-              <LogIn className="mr-2 h-6 w-6" /> ENTRAR EM SALA
-            </Button>
-          </>
+          <div className="flex flex-col gap-4">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                size="lg"
+                className="w-full h-16 text-xl font-black rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.3)] border-t border-purple-400/50 transition-all flex items-center justify-center gap-3"
+                onClick={handleCreateRoom}
+                disabled={loading}
+              >
+                <Plus className="h-6 w-6" /> CRIAR NOVA SALA
+              </Button>
+            </motion.div>
+            
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full h-16 text-xl font-black rounded-2xl border-2 border-slate-800 bg-slate-950/50 backdrop-blur-md text-slate-300 hover:border-purple-500/50 hover:text-purple-400 transition-all flex items-center justify-center gap-3"
+                onClick={() => setIsJoining(true)}
+                disabled={loading}
+              >
+                <LogIn className="h-6 w-6" /> ENTRAR EM SALA
+              </Button>
+            </motion.div>
+          </div>
         ) : (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-6 bg-slate-950/50 p-8 rounded-[2rem] border border-slate-800 shadow-2xl backdrop-blur-xl"
           >
-            <Input
-              placeholder="CÓDIGO DA SALA"
-              className="h-16 text-2xl font-black text-center tracking-[0.5em] uppercase border-2 border-purple-500 bg-slate-900 rounded-2xl focus-visible:ring-purple-500"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              maxLength={5}
-              autoFocus
-            />
-            <div className="flex gap-2">
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest ml-1">Inserir Código</label>
+              <Input
+                placeholder="00000"
+                className="h-20 text-4xl font-black text-center tracking-[0.3em] uppercase border-2 border-slate-800 bg-slate-900/50 rounded-2xl focus-visible:ring-purple-500 transition-all"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                maxLength={5}
+                autoFocus
+              />
+            </div>
+            
+            <div className="flex gap-3">
               <Button
                 variant="ghost"
-                className="flex-1 h-12 text-slate-400"
+                className="flex-1 h-14 text-slate-500 font-bold hover:text-white"
                 onClick={() => setIsJoining(false)}
               >
-                VOLTAR
+                CANCELAR
               </Button>
               <Button
-                className="flex-[2] h-12 bg-purple-600 hover:bg-purple-500"
+                className="flex-[2] h-14 bg-purple-600 hover:bg-purple-500 font-black rounded-xl shadow-lg shadow-purple-900/20"
                 onClick={handleJoinRoom}
                 disabled={loading}
               >
@@ -198,6 +214,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
             </div>
           </motion.div>
         )}
+      </div>
+
+      <div className="absolute bottom-8 text-slate-600 text-[10px] font-mono tracking-widest opacity-50 uppercase">
+        Project v2.0 // Neural Interface Connected
       </div>
     </div>
   );

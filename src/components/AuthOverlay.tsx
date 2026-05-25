@@ -59,6 +59,25 @@ export const AuthOverlay: React.FC = () => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="w-full max-w-md bg-slate-900 border-2 border-slate-800 p-10 rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden"
       >
+        <AnimatePresence>
+          {loading && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm"
+            >
+              <div className="relative flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+                <div className="absolute inset-0 w-12 h-12 border-4 border-purple-500/20 rounded-full" />
+              </div>
+              <p className="mt-4 text-[10px] text-purple-400 font-black uppercase tracking-[0.3em] animate-pulse">
+                Processando Dados...
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
         
         <div className="text-center mb-10">

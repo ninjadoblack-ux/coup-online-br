@@ -29,10 +29,26 @@ export const GameView: React.FC<GameViewProps> = ({
   logs 
 }) => {
   const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   
   const opponents = players.filter(p => p.id !== myPlayer?.id && p.status === 'alive');
   const isMyTurn = room.current_turn_player_id === myPlayer?.id;
   const pendingAction = actions.length > 0 ? actions[0] : null;
+
+  useEffect(() => {
+    if (pendingAction?.expires_at) {
+      const interval = setInterval(() => {
+        const expires = new Date(pendingAction.expires_at!).getTime();
+        const now = new Date().getTime();
+        const diff = Math.max(0, Math.floor((expires - now) / 1000));
+        setTimeLeft(diff);
+        if (diff <= 0) clearInterval(interval);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setTimeLeft(null);
+    }
+  }, [pendingAction?.expires_at]);
 
   const handleAction = async (actionType: string, targetId: string | null = null) => {
     if (!myPlayer || !isMyTurn) return;

@@ -42,7 +42,7 @@ export function useBotLogic(
         }
       });
     }
-  }, [room?.current_turn_player_id, actions.length, isHost]); // Only run when turn changes or number of actions change
+  }, [room?.current_turn_player_id, actions[0]?.id, isHost]); // Only run when turn changes or pending action changes
 
   const handleBotTurn = async (bot: Player) => {
     thinkingRef.current[bot.id] = true;

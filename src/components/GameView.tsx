@@ -287,7 +287,7 @@ export const GameView: React.FC<GameViewProps> = ({
               
               <h3 className="text-2xl font-black text-white leading-tight uppercase tracking-tight">
                 {players.find(p => p.id === pendingAction.player_id)?.name} <br/> 
-                <span className="text-red-500">Reivindica {pendingAction.action_type}!</span>
+                <span className="text-red-500">Reivindica {ACTION_LABELS[pendingAction.action_type] || pendingAction.action_type}!</span>
               </h3>
               
               <div className="flex flex-col gap-4 mt-12">

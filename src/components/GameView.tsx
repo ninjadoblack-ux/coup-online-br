@@ -110,6 +110,14 @@ export const GameView: React.FC<GameViewProps> = ({
 
   return (
     <div className="relative w-full h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="absolute top-4 right-4 z-20 text-slate-500 hover:text-red-400"
+        onClick={onLeaveRoom}
+      >
+        SAIR
+      </Button>
       {/* Top Bar - Opponents */}
       <div className="flex justify-center gap-4 p-4">
         {players.filter(p => p.id !== myPlayer?.id).map(opponent => (

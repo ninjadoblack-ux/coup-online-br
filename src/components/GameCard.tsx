@@ -3,7 +3,6 @@ import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CardType } from "@/types/game";
-import { Shield, Sword, Crown, UserRound, Coins } from "lucide-react";
 
 interface GameCardProps {
   type?: CardType;
@@ -61,20 +60,22 @@ export const GameCard: React.FC<GameCardProps> = ({
           className
         )}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_oklch(0.3_0.1_260),_transparent)] opacity-50" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-slate-900 flex items-center justify-center relative">
-             <div className="absolute inset-0 border border-purple-500/10 rounded-full animate-[spin_10s_linear_infinite]" />
-             <span className="text-4xl font-black text-slate-800 tracking-tighter italic group-hover:text-purple-900 transition-colors">C</span>
-          </div>
-          <div className="mt-4 flex gap-1">
-             <div className="w-1 h-1 rounded-full bg-slate-800" />
-             <div className="w-1 h-1 rounded-full bg-slate-800" />
-             <div className="w-1 h-1 rounded-full bg-slate-800" />
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://i.pinimg.com/736x/63/6f/0c/636f0c08a66f7b07a21e4016fb049d67.jpg" 
+            alt="Card Back" 
+            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-slate-950/20" />
+        </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/10 flex items-center justify-center relative bg-black/20 backdrop-blur-sm">
+             <div className="absolute inset-0 border border-purple-500/20 rounded-full animate-[spin_10s_linear_infinite]" />
+             <span className="text-4xl font-black text-white/20 tracking-tighter italic group-hover:text-purple-500/40 transition-colors">C</span>
           </div>
         </div>
-        <div className="absolute bottom-2 inset-x-0 flex justify-center opacity-10">
-           <span className="text-[6px] font-black uppercase tracking-[0.4em]">Security Layer v4.2</span>
+        <div className="absolute bottom-2 inset-x-0 flex justify-center opacity-30 z-10">
+           <span className="text-[6px] font-black uppercase tracking-[0.4em] text-white">Neural Protocol Active</span>
         </div>
       </motion.div>
     );
@@ -127,7 +128,7 @@ export const GameCard: React.FC<GameCardProps> = ({
               </span>
            </div>
            <div className="h-[1px] flex-1 bg-white/20" />
-        </div>
+         </div>
       </div>
     </motion.div>
   );

@@ -123,140 +123,178 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-2xl mx-auto gap-8 px-4 py-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-slate-400 uppercase tracking-widest text-sm font-bold">Código da Sala</h2>
+    <div className="flex flex-col items-center w-full max-w-2xl mx-auto gap-12 px-4 py-12 min-h-screen relative">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+      
+      <div className="text-center space-y-4 w-full">
+        <h2 className="text-slate-500 uppercase tracking-[0.3em] text-[10px] font-black">Room Interface // Protocol Activated</h2>
         <div 
-          className="flex items-center gap-4 bg-slate-900 border-2 border-purple-500/30 px-8 py-4 rounded-3xl cursor-pointer hover:border-purple-500 transition-all group"
+          className="relative inline-flex items-center gap-6 bg-slate-950/80 border-2 border-slate-800 px-12 py-6 rounded-[2.5rem] cursor-pointer hover:border-purple-500/50 transition-all group overflow-hidden shadow-2xl"
           onClick={copyCode}
         >
-          <span className="text-5xl font-black tracking-[0.2em] text-purple-400 group-hover:scale-110 transition-transform">
-            {room.code}
-          </span>
-          <Copy className="w-6 h-6 text-slate-500 group-hover:text-purple-400" />
+          <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex flex-col items-center">
+             <span className="text-6xl font-black tracking-[0.2em] text-white group-hover:scale-105 transition-transform drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+              {room.code}
+            </span>
+            <span className="text-[10px] text-slate-500 font-bold mt-2 group-hover:text-purple-400 transition-colors uppercase tracking-widest">Clique para copiar</span>
+          </div>
+          <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 group-hover:border-purple-500/50 transition-all">
+            <Copy className="w-6 h-6 text-slate-500 group-hover:text-purple-400" />
+          </div>
         </div>
       </div>
 
-      <div className="w-full bg-slate-900/50 border border-slate-800 rounded-3xl p-6 backdrop-blur-sm">
-        <div className="flex items-center gap-2 mb-6">
-          <Users className="w-5 h-5 text-purple-500" />
-          <h3 className="text-xl font-bold uppercase tracking-tight">Jogadores ({players.length}/6)</h3>
+      <div className="w-full glass-card rounded-[2.5rem] p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4">
+           <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-slate-800">
+             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Network Live</span>
+           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {players.map((player, idx) => (
-            <motion.div
-              key={player.id}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: idx * 0.1 }}
-              className={`flex items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border ${player.is_bot ? 'border-purple-500/30' : 'border-slate-700/50'} relative group`}
-            >
-              <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${player.is_bot ? 'from-purple-600 to-purple-900' : 'from-purple-500 to-purple-800'} flex items-center justify-center font-black text-xl`}>
-                {player.is_bot ? <Bot className="w-6 h-6 text-white" /> : player.name[0].toUpperCase()}
-              </div>
-              <div className="flex flex-col">
-                <span className={`font-bold ${player.is_bot ? 'text-purple-300' : 'text-slate-200'}`}>{player.name}</span>
-                {player.is_host && (
-                  <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Host</span>
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-2 bg-purple-600/20 rounded-lg border border-purple-500/30">
+            <Users className="w-6 h-6 text-purple-500" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-black uppercase tracking-tighter text-white">Jogadores</h3>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{players.length} de 6 conectados</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <AnimatePresence mode="popLayout">
+            {players.map((player, idx) => (
+              <motion.div
+                key={player.id}
+                layout
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                className={cn(
+                  "flex items-center gap-4 bg-slate-900/50 p-5 rounded-3xl border transition-all relative group",
+                  player.is_bot ? 'border-purple-500/30 shadow-[inset_0_0_20px_rgba(168,85,247,0.05)]' : 'border-slate-800 hover:border-slate-700'
                 )}
-                {player.is_bot && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] uppercase font-bold text-purple-400/70 tracking-wider">IA</span>
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">•</span>
-                    <span className={`text-[10px] uppercase font-bold tracking-wider ${
-                      player.bot_difficulty === 'easy' ? 'text-green-400/70' :
-                      player.bot_difficulty === 'moderate' ? 'text-yellow-400/70' :
-                      'text-red-400/70'
-                    }`}>
-                      {player.bot_difficulty === 'easy' ? 'Fácil' :
-                       player.bot_difficulty === 'moderate' ? 'Moderado' : 'Difícil'}
-                    </span>
+              >
+                <div className={cn(
+                  "w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg transition-transform group-hover:scale-110",
+                  player.is_bot ? 'bg-gradient-to-br from-purple-500 to-purple-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'
+                )}>
+                  {player.is_bot ? <Bot className="w-8 h-8 text-white" /> : player.name[0].toUpperCase()}
+                </div>
+                <div className="flex flex-col flex-1">
+                  <span className={cn(
+                    "font-black text-lg tracking-tight truncate max-w-[120px]",
+                    player.is_bot ? 'text-purple-300' : 'text-white'
+                  )}>{player.name}</span>
+                  <div className="flex items-center gap-2">
+                    {player.is_host && (
+                      <span className="text-[9px] px-2 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full font-black uppercase tracking-tighter">Host</span>
+                    )}
+                    {player.is_bot && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] px-2 py-0.5 bg-slate-800 text-slate-400 border border-slate-700 rounded-full font-black uppercase tracking-tighter">IA</span>
+                        <span className={cn(
+                          "text-[9px] font-black uppercase tracking-tighter",
+                          player.bot_difficulty === 'easy' ? 'text-green-500' :
+                          player.bot_difficulty === 'moderate' ? 'text-yellow-500' : 'text-red-500'
+                        )}>
+                          {player.bot_difficulty === 'easy' ? 'Fácil' :
+                           player.bot_difficulty === 'moderate' ? 'Moderado' : 'Difícil'}
+                        </span>
+                      </div>
+                    )}
                   </div>
+                </div>
+                
+                {isHost && player.is_bot && (
+                  <button
+                    onClick={() => handleRemoveBot(player.id)}
+                    className="absolute -top-2 -right-2 p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-500 hover:text-red-500 hover:border-red-500/50 opacity-0 group-hover:opacity-100 transition-all shadow-xl"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
-
+              </motion.div>
+            ))}
+            {Array.from({ length: Math.max(0, 4 - players.length) }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-[88px] border-2 border-dashed border-slate-800/50 rounded-3xl flex items-center justify-center text-slate-700 font-black uppercase tracking-widest text-[10px]">
+                Slot Livre
               </div>
-              
-              {isHost && player.is_bot && (
-                <button
-                  onClick={() => handleRemoveBot(player.id)}
-                  className="absolute top-2 right-2 p-1 rounded-full bg-slate-900/80 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </motion.div>
-          ))}
-          {Array.from({ length: Math.max(0, 4 - players.length) }).map((_, i) => (
-            <div key={i} className="h-20 border-2 border-dashed border-slate-800 rounded-2xl flex items-center justify-center text-slate-700">
-              Aguardando...
-            </div>
-          ))}
+            ))}
+          </AnimatePresence>
         </div>
       </div>
 
-      <div className="w-full max-w-xs space-y-4">
-        <Button
-          variant="ghost"
-          className="w-full text-slate-500 hover:text-red-400"
-          onClick={onLeaveRoom}
-        >
-          SAIR DA SALA
-        </Button>
+      <div className="w-full max-w-sm space-y-6">
         {isHost ? (
-          <div className="flex flex-col gap-3">
-            <Button
-              size="lg"
-              className="w-full h-16 text-xl font-bold rounded-2xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all hover:scale-105"
-              onClick={handleStartGame}
-              disabled={!canStart}
-            >
-              <Play className="mr-2 h-6 w-6" /> INICIAR PARTIDA
-            </Button>
+          <div className="flex flex-col gap-4">
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                size="lg"
+                className="w-full h-20 text-2xl font-black rounded-3xl bg-purple-600 hover:bg-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.4)] transition-all border-t border-purple-400/50 disabled:opacity-50 disabled:grayscale"
+                onClick={handleStartGame}
+                disabled={!canStart}
+              >
+                <Play className="mr-3 h-8 w-8 fill-current" /> INICIAR
+              </Button>
+            </motion.div>
             
             {players.length < 6 && (
-              <div className="flex flex-col gap-2 p-3 bg-slate-900/50 rounded-xl border border-slate-800">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
-                    <Brain className="w-3 h-3" /> Nível do Robô
+              <div className="bg-slate-950/50 rounded-[2rem] p-6 border border-slate-800 backdrop-blur-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-black text-slate-500 tracking-[0.2em] flex items-center gap-2">
+                    <Brain className="w-3 h-3 text-purple-500" /> Configurar Robô
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-3">
                   <Select 
                     value={selectedDifficulty} 
                     onValueChange={(v) => setSelectedDifficulty(v as BotDifficulty)}
                   >
-                    <SelectTrigger className="h-10 border-purple-500/20 bg-slate-950 text-xs">
+                    <SelectTrigger className="h-12 border-slate-800 bg-slate-900/50 text-sm font-bold rounded-xl focus:ring-purple-500/30">
                       <SelectValue placeholder="Dificuldade" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-800">
-                      <SelectItem value="easy">Fácil</SelectItem>
-                      <SelectItem value="moderate">Moderado</SelectItem>
-                      <SelectItem value="hard">Difícil</SelectItem>
+                    <SelectContent className="bg-slate-900 border-slate-800 text-white rounded-xl">
+                      <SelectItem value="easy" className="focus:bg-purple-500/20 focus:text-purple-300">Nível Fácil</SelectItem>
+                      <SelectItem value="moderate" className="focus:bg-purple-500/20 focus:text-purple-300">Nível Moderado</SelectItem>
+                      <SelectItem value="hard" className="focus:bg-purple-500/20 focus:text-purple-300">Nível Difícil</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button
                     variant="outline"
-                    className="flex-1 h-10 border-purple-500/30 text-purple-400 hover:bg-purple-950/20 rounded-lg text-xs"
+                    className="w-full h-12 border-purple-500/20 bg-purple-500/5 text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/40 rounded-xl font-black uppercase text-xs tracking-widest transition-all"
                     onClick={handleAddBot}
                   >
-                    <Bot className="mr-2 h-3 w-3" /> ADICIONAR
+                    <Plus className="mr-2 h-4 w-4" /> Adicionar IA
                   </Button>
                 </div>
               </div>
             )}
-
           </div>
         ) : (
-          <div className="text-center p-4 bg-slate-900/50 rounded-2xl border border-slate-800 text-slate-400 italic">
-            Aguardando o host iniciar a partida...
+          <div className="text-center p-8 bg-slate-950/50 rounded-[2.5rem] border border-slate-800 text-slate-500 flex flex-col items-center gap-4">
+            <div className="w-10 h-10 rounded-full border-2 border-slate-800 border-t-purple-500 animate-spin" />
+            <p className="font-black uppercase tracking-widest text-[10px]">Aguardando conexão do host...</p>
           </div>
         )}
-        {!canStart && isHost && (
-          <p className="text-center text-xs text-red-400 uppercase font-bold tracking-tighter">
-            Mínimo de 2 jogadores necessários
-          </p>
-        )}
+        
+        <div className="flex flex-col items-center gap-4 pt-4">
+           {!canStart && isHost && (
+            <p className="text-[10px] text-red-500 font-black uppercase tracking-[0.2em] animate-pulse">
+              Protocolo requer no mínimo 2 jogadores
+            </p>
+          )}
+          <Button
+            variant="ghost"
+            className="text-slate-600 hover:text-red-500 font-bold uppercase tracking-widest text-[10px] hover:bg-transparent"
+            onClick={onLeaveRoom}
+          >
+            Abortar Missão
+          </Button>
+        </div>
       </div>
     </div>
   );

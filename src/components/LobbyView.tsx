@@ -215,14 +215,37 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
             </Button>
             
             {players.length < 6 && (
-              <Button
-                variant="outline"
-                className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-950/20 rounded-xl"
-                onClick={handleAddBot}
-              >
-                <Bot className="mr-2 h-4 w-4" /> + ADICIONAR ROBÔ
-              </Button>
+              <div className="flex flex-col gap-2 p-3 bg-slate-900/50 rounded-xl border border-slate-800">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3" /> Nível do Robô
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Select 
+                    value={selectedDifficulty} 
+                    onValueChange={(v) => setSelectedDifficulty(v as BotDifficulty)}
+                  >
+                    <SelectTrigger className="h-10 border-purple-500/20 bg-slate-950 text-xs">
+                      <SelectValue placeholder="Dificuldade" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-800">
+                      <SelectItem value="easy">Fácil</SelectItem>
+                      <SelectItem value="moderate">Moderado</SelectItem>
+                      <SelectItem value="hard">Difícil</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-10 border-purple-500/30 text-purple-400 hover:bg-purple-950/20 rounded-lg text-xs"
+                    onClick={handleAddBot}
+                  >
+                    <Bot className="mr-2 h-3 w-3" /> ADICIONAR
+                  </Button>
+                </div>
+              </div>
             )}
+
           </div>
         ) : (
           <div className="text-center p-4 bg-slate-900/50 rounded-2xl border border-slate-800 text-slate-400 italic">

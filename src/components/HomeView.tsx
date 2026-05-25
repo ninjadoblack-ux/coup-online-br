@@ -216,9 +216,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
         )}
       </div>
 
-      <div className="absolute bottom-8 text-slate-600 text-[10px] font-mono tracking-widest opacity-50 uppercase">
-        Project v2.0 // Neural Interface Connected
-      </div>
     </div>
   );
 };

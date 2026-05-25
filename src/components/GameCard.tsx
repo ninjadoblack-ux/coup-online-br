@@ -49,10 +49,10 @@ export const GameCard: React.FC<GameCardProps> = ({
         whileHover={isSelectable ? { scale: 1.05, y: -10 } : {}}
         onClick={isSelectable ? onClick : undefined}
         className={cn(
-          "relative w-24 h-36 md:w-32 md:h-48 rounded-[1.5rem] border-2 border-slate-800 bg-slate-950 overflow-hidden cursor-default shadow-2xl group",
+          "relative w-20 h-30 xs:w-24 xs:h-36 md:w-32 md:h-48 rounded-[1.2rem] xs:rounded-[1.5rem] border-2 border-slate-800 bg-slate-950 overflow-hidden cursor-default shadow-2xl group",
           isSelectable && "cursor-pointer border-purple-500/50 hover:border-purple-400",
           isSelected && "ring-4 ring-purple-500 border-purple-400 scale-105",
-          compact && "w-16 h-24 md:w-20 md:h-30 rounded-xl",
+          compact && "w-14 h-20 xs:w-16 xs:h-24 md:w-20 md:h-30 rounded-xl",
           className
         )}
       >
@@ -85,9 +85,9 @@ export const GameCard: React.FC<GameCardProps> = ({
       initial={{ rotateY: 90, opacity: 0 }}
       animate={{ rotateY: 0, opacity: 1 }}
       className={cn(
-        "relative w-24 h-36 md:w-32 md:h-48 rounded-[1.5rem] border-2 bg-slate-950 flex flex-col items-center justify-between transition-all shadow-2xl overflow-hidden group",
+        "relative w-20 h-30 xs:w-24 xs:h-36 md:w-32 md:h-48 rounded-[1.2rem] xs:rounded-[1.5rem] border-2 bg-slate-950 flex flex-col items-center justify-between transition-all shadow-2xl overflow-hidden group",
         colorClass,
-        compact && "w-16 h-24 md:w-20 md:h-30 rounded-xl",
+        compact && "w-14 h-20 xs:w-16 xs:h-24 md:w-20 md:h-30 rounded-xl",
         className
       )}
     >

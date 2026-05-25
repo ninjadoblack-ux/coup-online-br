@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Player, Room, PlayerCard, GameAction, GameLog } from "@/types/game";
 import { GameCard } from "./GameCard";

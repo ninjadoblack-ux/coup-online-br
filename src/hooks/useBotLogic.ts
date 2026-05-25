@@ -51,7 +51,14 @@ export function useBotLogic(
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     try {
-      const possibleActions = ['Income', 'Foreign Aid', 'Tax', 'Steal', 'Assassinate', 'Exchange', 'Coup'];
+      const botCards = allCards.filter(c => c.player_id === bot.id && !c.is_revealed);
+      const canTakeAction = (action: string) => {
+        const req = ACTION_REQUIRED_CARDS[action];
+        if (!req) return true;
+        return botCards.some(c => c.card_type === req);
+      };
+
+      const legalActions = ['Income', 'Foreign Aid', 'Tax', 'Steal', 'Assassinate', 'Exchange', 'Coup'].filter(canTakeAction);
       let actionType = 'Income';
 
       const difficulty = bot.bot_difficulty || 'moderate';

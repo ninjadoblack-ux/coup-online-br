@@ -308,8 +308,17 @@ export const GameView: React.FC<GameViewProps> = ({
               </div>
               
               <h3 className="text-xl sm:text-2xl font-black text-white leading-tight uppercase tracking-tight">
-                {players.find(p => p.id === pendingAction.player_id)?.name} <br/> 
-                <span className="text-red-500 text-lg sm:text-2xl">Reivindica {ACTION_LABELS[pendingAction.action_type] || pendingAction.action_type}!</span>
+                {pendingAction.status === 'blocking' ? (
+                  <>
+                    {players.find(p => p.id === pendingAction.blocker_id)?.name} <br/>
+                    <span className="text-red-500 text-lg sm:text-2xl">Bloqueou {ACTION_LABELS[pendingAction.action_type]}!</span>
+                  </>
+                ) : (
+                  <>
+                    {players.find(p => p.id === pendingAction.player_id)?.name} <br/> 
+                    <span className="text-red-500 text-lg sm:text-2xl">Reivindica {ACTION_LABELS[pendingAction.action_type] || pendingAction.action_type}!</span>
+                  </>
+                )}
               </h3>
               
               <div className="flex flex-col gap-3 sm:gap-4 mt-8 sm:mt-12">
@@ -326,15 +335,17 @@ export const GameView: React.FC<GameViewProps> = ({
                     className="h-12 sm:h-14 border-slate-700 bg-slate-800 text-slate-300 font-bold rounded-2xl hover:bg-slate-700" 
                     onClick={() => handleReaction('allow')}
                    >
-                    PERMITIR
+                    {pendingAction.status === 'blocking' ? 'PERMITIR BLOQUEIO' : 'PERMITIR'}
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    className="h-12 sm:h-14 border-slate-700 bg-slate-800 text-slate-300 font-bold rounded-2xl hover:bg-slate-700"
-                    onClick={() => handleReaction('block')}
-                  >
-                    BLOQUEAR
-                  </Button>
+                  {pendingAction.status !== 'blocking' && BLOCKABLE_ACTIONS[pendingAction.action_type] && (
+                    <Button 
+                      variant="outline" 
+                      className="h-12 sm:h-14 border-slate-700 bg-slate-800 text-slate-300 font-bold rounded-2xl hover:bg-slate-700"
+                      onClick={() => handleReaction('block')}
+                    >
+                      BLOQUEAR
+                    </Button>
+                  )}
                 </div>
               </div>
             </motion.div>

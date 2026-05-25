@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CardType } from "@/types/game";
@@ -34,7 +34,7 @@ const cardColors: Record<CardType, string> = {
 // ... keep existing code
 
 
-export const GameCard: React.FC<GameCardProps> = ({
+export const GameCard: React.FC<GameCardProps> = memo(({
   type,
   isRevealed = false,
   isSelectable = false,
@@ -128,4 +128,6 @@ export const GameCard: React.FC<GameCardProps> = ({
       </div>
     </motion.div>
   );
-};
+});
+
+GameCard.displayName = "GameCard";

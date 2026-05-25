@@ -118,7 +118,8 @@ export function useGameState(roomId: string | null) {
             setActions(prev => [...prev, payload.new as GameAction]);
           } else if (payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
             const current = (payload.new || payload.old) as GameAction;
-            if (current.status !== 'pending' || payload.eventType === 'DELETE') {
+            const activeStatuses = ['pending', 'challenged', 'blocked', 'allowed'];
+            if (payload.eventType === 'DELETE' || !activeStatuses.includes(current.status)) {
               setActions(prev => prev.filter(a => a.id !== current.id));
             } else {
               setActions(prev => prev.map(a => a.id === current.id ? (payload.new as GameAction) : a));

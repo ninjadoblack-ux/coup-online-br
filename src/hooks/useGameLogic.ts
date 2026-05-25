@@ -64,15 +64,13 @@ export function useGameLogic(
           }
           break;
         case 'Assassinate':
-          // Cost is paid regardless of whether it succeeds in some rules, but usually paid on announcement
-          // Let's pay it now if not already paid
-          await updateCoins(player.id, player.coins - 3);
+          // Cost is paid on announcement now, but we verify target still exists
           if (action.target_id) {
             await loseCard(action.target_id);
           }
           break;
         case 'Coup':
-          await updateCoins(player.id, player.coins - 7);
+          // Cost is paid on announcement now
           if (action.target_id) {
             await loseCard(action.target_id);
           }

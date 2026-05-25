@@ -1,12 +1,19 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Copy, Play, Users, Bot, X } from "lucide-react";
-import { Player, Room } from "@/types/game";
+import { Copy, Play, Users, Bot, X, Brain } from "lucide-react";
+import { Player, Room, BotDifficulty } from "@/types/game";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { INITIAL_DECK, shuffleDeck } from "@/lib/game-logic";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface LobbyViewProps {
   room: Room;
@@ -16,8 +23,10 @@ interface LobbyViewProps {
 }
 
 export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, onLeaveRoom }) => {
+  const [selectedDifficulty, setSelectedDifficulty] = useState<BotDifficulty>('moderate');
   const isHost = myPlayer?.is_host || false;
   const canStart = players.length >= 2;
+
 
   const copyCode = () => {
     navigator.clipboard.writeText(room.code);

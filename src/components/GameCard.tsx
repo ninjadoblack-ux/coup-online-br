@@ -110,7 +110,7 @@ export const GameCard: React.FC<GameCardProps> = ({
           "text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white drop-shadow-lg", 
           compact && "text-[8px] tracking-widest pt-2"
         )}>
-          {type ? cardNames[type] : ""}
+          {type ? CARD_LABELS[type] : ""}
         </span>
         <div className="w-8 h-[1px] bg-white/40" />
       </div>
@@ -120,7 +120,7 @@ export const GameCard: React.FC<GameCardProps> = ({
            <div className="h-[1px] flex-1 bg-white/20" />
            <div className="px-2 py-0.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-sm">
               <span className={cn("text-[8px] font-black text-white uppercase tracking-tighter", compact && "hidden")}>
-                Active Unit
+                Unidade Ativa
               </span>
            </div>
            <div className="h-[1px] flex-1 bg-white/20" />

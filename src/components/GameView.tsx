@@ -569,6 +569,21 @@ export const GameView: React.FC<GameViewProps> = ({
 };
 
 const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelect }: any) => {
+  const [showEmote, setShowEmote] = useState(false);
+
+  useEffect(() => {
+    if (opponent.current_emote && opponent.emote_at) {
+      const emoteTime = new Date(opponent.emote_at).getTime();
+      const now = new Date().getTime();
+      if (now - emoteTime < 3000) {
+        setShowEmote(true);
+        const timer = setTimeout(() => setShowEmote(false), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+    setShowEmote(false);
+  }, [opponent.current_emote, opponent.emote_at]);
+
   return (
     <motion.div 
       initial={{ y: -20, opacity: 0 }}
@@ -581,6 +596,19 @@ const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelec
         isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
       )}
     >
+      <AnimatePresence>
+        {showEmote && (
+          <motion.div
+            initial={{ scale: 0, y: 10, opacity: 0 }}
+            animate={{ scale: 1.5, y: -40, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute z-30 text-3xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+          >
+            {opponent.current_emote}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {currentTurnId === opponent.id && (
          <div className="absolute -top-1 -left-1 -right-1 -bottom-1 border border-purple-500 rounded-[1.6rem] sm:rounded-[2.1rem] animate-pulse pointer-events-none" />
       )}

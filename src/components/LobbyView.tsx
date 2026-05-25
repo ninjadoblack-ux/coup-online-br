@@ -161,8 +161,20 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
                   <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Host</span>
                 )}
                 {player.is_bot && (
-                  <span className="text-[10px] uppercase font-bold text-purple-400/70 tracking-wider">IA</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] uppercase font-bold text-purple-400/70 tracking-wider">IA</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">•</span>
+                    <span className={`text-[10px] uppercase font-bold tracking-wider ${
+                      player.bot_difficulty === 'easy' ? 'text-green-400/70' :
+                      player.bot_difficulty === 'moderate' ? 'text-yellow-400/70' :
+                      'text-red-400/70'
+                    }`}>
+                      {player.bot_difficulty === 'easy' ? 'Fácil' :
+                       player.bot_difficulty === 'moderate' ? 'Moderado' : 'Difícil'}
+                    </span>
+                  </div>
                 )}
+
               </div>
               
               {isHost && player.is_bot && (

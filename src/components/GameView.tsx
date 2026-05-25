@@ -305,6 +305,7 @@ export const GameView: React.FC<GameViewProps> = ({
                   <Button 
                     variant="outline" 
                     className="h-12 sm:h-14 border-slate-700 bg-slate-800 text-slate-300 font-bold rounded-2xl hover:bg-slate-700"
+                    onClick={() => handleReaction('block')}
                   >
                     BLOQUEAR
                   </Button>

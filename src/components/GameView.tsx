@@ -28,9 +28,9 @@ export const GameView: React.FC<GameViewProps> = ({
   actions, 
   logs 
 }) => {
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+  const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
   
-  const opponents = players.filter(p => p.id !== myPlayer?.id);
+  const opponents = players.filter(p => p.id !== myPlayer?.id && p.status === 'alive');
   const isMyTurn = room.current_turn_player_id === myPlayer?.id;
   const pendingAction = actions.length > 0 ? actions[0] : null;
 

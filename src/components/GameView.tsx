@@ -8,12 +8,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Coins, History, Timer } from "lucide-react";
 import coinGold from "@/assets/coin-gold.png";
 import coinSilver from "@/assets/coin-silver.png";
-import { ACTION_DESCRIPTIONS } from "@/lib/game-logic";
+import { ACTION_DESCRIPTIONS, ACTION_LABELS } from "@/lib/game-logic";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBotLogic } from "@/hooks/useBotLogic";
-import { Bot } from "lucide-react";
+import { Bot, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface GameViewProps {
   room: Room;
@@ -80,7 +86,7 @@ export const GameView: React.FC<GameViewProps> = ({
 
       await supabase.from('game_logs').insert([{
         room_id: room.id,
-        message: `${myPlayer.name} anunciou ${actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
+        message: `${myPlayer.name} anunciou ${ACTION_LABELS[actionType] || actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
       }]);
 
       setIsSelectingTarget(null);
@@ -281,7 +287,7 @@ export const GameView: React.FC<GameViewProps> = ({
               
               <h3 className="text-2xl font-black text-white leading-tight uppercase tracking-tight">
                 {players.find(p => p.id === pendingAction.player_id)?.name} <br/> 
-                <span className="text-red-500">Reivindica {pendingAction.action_type}!</span>
+                <span className="text-red-500">Reivindica {ACTION_LABELS[pendingAction.action_type] || pendingAction.action_type}!</span>
               </h3>
               
               <div className="flex flex-col gap-4 mt-12">
@@ -360,21 +366,33 @@ export const GameView: React.FC<GameViewProps> = ({
                 </div>
              </div>
              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {Object.keys(ACTION_DESCRIPTIONS).map((action) => (
-                <Button
-                  key={action}
-                  disabled={!isMyTurn || pendingAction !== null}
-                  variant="outline"
-                  className={cn(
-                    "h-14 text-[10px] font-black uppercase tracking-wider border-slate-800 bg-slate-900/50 hover:bg-purple-600 hover:text-white hover:border-purple-400 transition-all rounded-xl",
-                    isMyTurn && "border-slate-700 ring-1 ring-white/5",
-                    ["Coup", "Assassinate"].includes(action) && "hover:bg-red-600 hover:border-red-400"
-                  )}
-                  onClick={() => handleAction(action)}
-                >
-                  {action}
-                </Button>
-              ))}
+              <TooltipProvider>
+                {Object.keys(ACTION_DESCRIPTIONS).map((action) => (
+                  <Tooltip key={action}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        disabled={!isMyTurn || pendingAction !== null}
+                        variant="outline"
+                        className={cn(
+                          "h-14 text-[10px] font-black uppercase tracking-wider border-slate-800 bg-slate-900/50 hover:bg-purple-600 hover:text-white hover:border-purple-400 transition-all rounded-xl relative group",
+                          isMyTurn && "border-slate-700 ring-1 ring-white/5",
+                          ["Coup", "Assassinate"].includes(action) && "hover:bg-red-600 hover:border-red-400"
+                        )}
+                        onClick={() => handleAction(action)}
+                      >
+                        {ACTION_LABELS[action] || action}
+                        <Info className="absolute top-1 right-1 w-2.5 h-2.5 opacity-20 group-hover:opacity-100 transition-opacity" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-900 border-slate-800 text-white p-3 max-w-xs rounded-xl shadow-2xl">
+                      <div className="space-y-1">
+                        <p className="font-black uppercase tracking-widest text-xs text-purple-400">{ACTION_LABELS[action]}</p>
+                        <p className="text-[10px] text-slate-300 leading-relaxed font-medium">{ACTION_DESCRIPTIONS[action]}</p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
             </div>
           </div>
         </div>

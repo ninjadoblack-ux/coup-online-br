@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, Player, GameAction } from '@/types/game';
+import { ACTION_LABELS } from '@/lib/game-logic';
 
 export function useBotLogic(
   room: Room | null,
@@ -117,7 +118,7 @@ export function useBotLogic(
 
       await supabase.from('game_logs').insert([{
         room_id: room!.id,
-        message: `${bot.name} anunciou ${actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
+        message: `${bot.name} anunciou ${ACTION_LABELS[actionType] || actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
       }]);
 
     } catch (err) {

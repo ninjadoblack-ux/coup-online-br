@@ -36,7 +36,8 @@ export const ACTION_LABELS: Record<string, string> = {
   'Exchange': 'Trocar',
   'Coup': 'Golpe de Estado',
   'Block': 'Bloquear',
-  'Challenge': 'Contestar'
+  'Challenge': 'Contestar',
+  'Challenge Block': 'Contestar Bloqueio'
 };
 
 export const CARD_LABELS: Record<string, string> = {

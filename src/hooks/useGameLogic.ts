@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, Player, GameAction } from '@/types/game';
-import { ACTION_REQUIRED_CARDS, ACTION_LABELS, CARD_LABELS } from '@/lib/game-logic';
+import { ACTION_REQUIRED_CARDS, ACTION_LABELS, CARD_LABELS, BLOCKABLE_ACTIONS } from '@/lib/game-logic';
 
 export function useGameLogic(
   room: Room | null,
@@ -27,8 +27,12 @@ export function useGameLogic(
       resolveAction(currentAction, 'challenge');
       return;
     }
+    if (currentAction.status === 'block_challenged') {
+      resolveAction(currentAction, 'block_challenge');
+      return;
+    }
 
-    if (currentAction.status === 'pending') {
+    if (currentAction.status === 'pending' || currentAction.status === 'blocking') {
       const expiresAt = currentAction.expires_at ? new Date(currentAction.expires_at).getTime() : 0;
       const diff = expiresAt - Date.now();
 
@@ -42,7 +46,7 @@ export function useGameLogic(
     }
   }, [room?.status, currentAction?.id, currentAction?.status, currentAction?.expires_at, isHost]);
 
-  const resolveAction = async (action: GameAction, outcome: 'execute' | 'block' | 'challenge') => {
+  const resolveAction = async (action: GameAction, outcome: 'execute' | 'block' | 'challenge' | 'block_challenge') => {
     if (processingRef.current === action.id) return;
     processingRef.current = action.id;
 
@@ -55,8 +59,9 @@ export function useGameLogic(
       // Handle challenge: verify announcer holds the required card
       if (outcome === 'challenge') {
         const requiredCard = ACTION_REQUIRED_CARDS[action.action_type];
+        const challenger = players.find(p => p.id === action.challenger_id);
+        
         if (!requiredCard) {
-          // Action cannot be challenged; just execute
           shouldExecute = true;
         } else {
           const { data: cards } = await supabase
@@ -67,22 +72,61 @@ export function useGameLogic(
           const hasCard = cards?.some(c => c.card_type === requiredCard);
 
           if (hasCard) {
-            // Announcer was telling the truth: action executes, but we can't know
-            // who the challenger is from a single status flip — treat as executed.
+            // Announcer was telling the truth: announcer keeps card, action executes, challenger loses influence
             await supabase.from('game_logs').insert([{
               room_id: room!.id,
-              message: `${player.name} provou ter ${CARD_LABELS[requiredCard]}! Contestação falhou.`
+              message: `${player.name} provou ter ${CARD_LABELS[requiredCard]}! Ação ${ACTION_LABELS[action.action_type]} segue adiante.`
             }]);
+            if (challenger) await loseCard(challenger.id);
             shouldExecute = true;
           } else {
             // Bluff caught: announcer loses a card, action cancelled, refund cost
             await loseCard(player.id);
             await supabase.from('game_logs').insert([{
               room_id: room!.id,
-              message: `${player.name} estava blefando! Ação ${ACTION_LABELS[action.action_type] || action.action_type} cancelada.`
+              message: `${player.name} estava blefando sobre ter ${CARD_LABELS[requiredCard]}! Ação cancelada.`
             }]);
             await refundCost(player, action.action_type);
             shouldExecute = false;
+          }
+        }
+      }
+
+      // Handle challenge to a block: verify blocker holds the required blocking card
+      if (outcome === 'block_challenge') {
+        const blocker = players.find(p => p.id === action.blocker_id);
+        const challenger = players.find(p => p.id === action.challenger_id);
+        const blockableBy = BLOCKABLE_ACTIONS[action.action_type] || [];
+
+        if (!blocker) {
+          shouldExecute = true;
+        } else {
+          const { data: cards } = await supabase
+            .from('player_cards')
+            .select('*')
+            .eq('player_id', blocker.id)
+            .eq('is_revealed', false);
+          
+          const hasCard = cards?.some(c => blockableBy.includes(c.card_type));
+
+          if (hasCard) {
+            // Blocker was telling the truth: action stays blocked, challenger loses influence
+            const matchedCard = cards!.find(c => blockableBy.includes(c.card_type))!.card_type;
+            await supabase.from('game_logs').insert([{
+              room_id: room!.id,
+              message: `${blocker.name} provou ter ${CARD_LABELS[matchedCard]}! O bloqueio permanece.`
+            }]);
+            if (challenger) await loseCard(challenger.id);
+            await refundCost(player, action.action_type);
+            shouldExecute = false;
+          } else {
+            // Blocker bluff caught: blocker loses a card, action executes normally
+            await loseCard(blocker.id);
+            await supabase.from('game_logs').insert([{
+              room_id: room!.id,
+              message: `${blocker.name} estava blefando sobre o bloqueio! Ação ${ACTION_LABELS[action.action_type]} de ${player.name} executa.`
+            }]);
+            shouldExecute = true;
           }
         }
       }

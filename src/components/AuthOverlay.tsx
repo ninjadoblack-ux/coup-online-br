@@ -51,65 +51,82 @@ export const AuthOverlay: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 px-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl px-4 cyber-grid">
+      <div className="scanline opacity-20" />
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl"
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="w-full max-w-md bg-slate-900 border-2 border-slate-800 p-10 rounded-[3rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden"
       >
-        <h2 className="text-3xl font-black text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">
-          {isLogin ? "ENTRAR NO JOGO" : "CRIAR CONTA"}
-        </h2>
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+        
+        <div className="text-center mb-10">
+           <div className="w-16 h-16 bg-purple-600/20 border border-purple-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl font-black text-purple-500">C</span>
+           </div>
+           <h2 className="text-4xl font-black text-white uppercase tracking-tighter">
+            {isLogin ? "Identificação" : "Nova Conta"}
+          </h2>
+          <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mt-1">Sincronização Requerida</p>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            type="email"
-            placeholder="Seu Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-12 bg-slate-800 border-slate-700 text-white rounded-xl focus:ring-purple-500"
-            required={!loading}
-          />
-          <Input
-            type="password"
-            placeholder="Sua Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-12 bg-slate-800 border-slate-700 text-white rounded-xl focus:ring-purple-500"
-            required={!loading}
-          />
-          <Button 
-            className="w-full h-12 bg-purple-600 hover:bg-purple-500 font-bold text-lg rounded-xl"
-            disabled={loading}
-          >
-            {loading ? "CARREGANDO..." : (isLogin ? "ENTRAR" : "CADASTRAR")}
-          </Button>
+          <div className="space-y-2">
+            <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest ml-1">Diretório Email</label>
+            <Input
+              type="email"
+              placeholder="user@neural.link"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-14 bg-slate-950/50 border-slate-800 text-white rounded-2xl focus:ring-purple-500 focus:border-purple-500 transition-all font-mono"
+              required={!loading}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest ml-1">Chave de Acesso</label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-14 bg-slate-950/50 border-slate-800 text-white rounded-2xl focus:ring-purple-500 focus:border-purple-500 transition-all font-mono"
+              required={!loading}
+            />
+          </div>
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <Button 
+              className="w-full h-16 bg-purple-600 hover:bg-purple-500 font-black text-xl rounded-2xl shadow-lg shadow-purple-900/20 border-t border-purple-400/30 mt-4"
+              disabled={loading}
+            >
+              {loading ? "PROCESSANDO..." : (isLogin ? "CONECTAR" : "REGISTRAR")}
+            </Button>
+          </motion.div>
         </form>
 
-        <div className="relative my-8">
+        <div className="relative my-10">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-slate-800"></span>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-slate-900 px-2 text-slate-500 font-bold">Ou</span>
+          <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
+            <span className="bg-slate-900 px-4 text-slate-600">Protocolo Alternativo</span>
           </div>
         </div>
 
         <Button 
           variant="outline"
-          className="w-full h-12 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white font-bold text-lg rounded-xl"
+          className="w-full h-14 border-slate-800 bg-slate-950/50 text-slate-400 hover:bg-slate-800 hover:text-white font-black text-xs rounded-2xl uppercase tracking-widest transition-all"
           onClick={handleGuestLogin}
           disabled={loading}
         >
-          {loading ? "CARREGANDO..." : "ENTRAR COMO CONVIDADO"}
+          {loading ? "PROCESSANDO..." : "Entrar como Convidado"}
         </Button>
         
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <button 
-            className="text-slate-400 hover:text-purple-400 text-sm font-bold uppercase tracking-wider"
+            className="text-slate-500 hover:text-purple-400 text-[10px] font-black uppercase tracking-widest transition-colors"
             onClick={() => setIsLogin(!isLogin)}
           >
-            {isLogin ? "Não tem uma conta? Cadastre-se" : "Já tem conta? Entre aqui"}
+            {isLogin ? "Ainda não registrado? Criar Perfil" : "Já possui registro? Acessar"}
           </button>
         </div>
       </motion.div>

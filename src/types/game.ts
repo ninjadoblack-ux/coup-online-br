@@ -30,6 +30,8 @@ export interface Player {
   is_bot?: boolean;
   bot_difficulty?: BotDifficulty;
   turn_order: number | null;
+  current_emote?: string | null;
+  emote_at?: string | null;
 }
 
 export interface PlayerCard {

@@ -42,13 +42,17 @@ export function useGameState(roomId: string | null) {
             setMyPlayer(currentMe);
             // Fetch my cards and logs/actions in parallel
             const [cardsRes, logsRes, actionsRes] = await Promise.all([
-              supabase.from('player_cards').select('*').eq('player_id', currentMe.id),
+              supabase.from('player_cards').select('*').in('player_id', typedPlayers.map(p => p.id)),
               supabase.from('game_logs').select('*').eq('room_id', roomId).order('created_at', { ascending: false }).limit(20),
               supabase.from('game_actions').select('*').eq('room_id', roomId).eq('status', 'pending')
             ]);
             
             if (!mounted) return;
-            if (cardsRes.data) setMyCards(cardsRes.data as PlayerCard[]);
+            if (cardsRes.data) {
+              const typedCards = cardsRes.data as PlayerCard[];
+              setAllCards(typedCards);
+              setMyCards(typedCards.filter(c => c.player_id === currentMe.id));
+            }
             if (logsRes.data) setLogs(logsRes.data as GameLog[]);
             if (actionsRes.data) setActions(actionsRes.data as GameAction[]);
           }

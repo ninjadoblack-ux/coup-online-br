@@ -135,6 +135,7 @@ export type Database = {
           avatar: string | null
           coins: number | null
           id: string
+          is_bot: boolean | null
           is_host: boolean | null
           joined_at: string | null
           name: string
@@ -147,6 +148,7 @@ export type Database = {
           avatar?: string | null
           coins?: number | null
           id?: string
+          is_bot?: boolean | null
           is_host?: boolean | null
           joined_at?: string | null
           name: string
@@ -159,6 +161,7 @@ export type Database = {
           avatar?: string | null
           coins?: number | null
           id?: string
+          is_bot?: boolean | null
           is_host?: boolean | null
           joined_at?: string | null
           name?: string

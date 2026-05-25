@@ -1,0 +1,1 @@
+ALTER TABLE public.players ADD COLUMN is_bot BOOLEAN DEFAULT FALSE;

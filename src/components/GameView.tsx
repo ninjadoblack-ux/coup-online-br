@@ -516,10 +516,36 @@ export const GameView: React.FC<GameViewProps> = ({
       </AnimatePresence>
 
       {/* Bottom Interface - Player Panel */}
-      <div className="bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 p-3 sm:p-6 z-20">
+      <div className="bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 p-3 sm:p-6 z-20 relative">
+        {/* Emote Picker */}
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-2 bg-slate-900/80 backdrop-blur-md p-2 rounded-2xl border border-slate-800/50 shadow-2xl z-30">
+          {EMOTES.map(emote => (
+            <button 
+              key={emote}
+              onClick={() => handleSendEmote(emote)}
+              className="text-xl hover:scale-125 transition-transform active:scale-95 px-1"
+            >
+              {emote}
+            </button>
+          ))}
+        </div>
+
         <div className="max-w-5xl mx-auto flex flex-col xl:flex-row items-center gap-4 sm:gap-10">
           
-          <div className="flex items-center gap-4 sm:gap-8">
+          <div className="flex items-center gap-4 sm:gap-8 relative">
+            <AnimatePresence>
+              {showMyEmote && (
+                <motion.div
+                  initial={{ scale: 0, y: 0, opacity: 0 }}
+                  animate={{ scale: 1.5, y: -60, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="absolute left-0 top-0 z-30 text-4xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+                >
+                  {myPlayer?.current_emote}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="flex flex-col items-center gap-1.5">
                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-700 p-[2px] shadow-lg">
                   <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center gap-1 sm:gap-1.5">

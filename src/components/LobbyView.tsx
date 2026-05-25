@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Copy, Play, Users, Bot, X, Brain, Plus } from "lucide-react";
@@ -166,59 +166,13 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <AnimatePresence mode="popLayout">
-            {players.map((player, idx) => (
-              <motion.div
-                key={player.id}
-                layout
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                className={cn(
-                  "flex items-center gap-3 sm:gap-4 bg-slate-900/50 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-3xl border transition-all relative group",
-                  player.is_bot ? 'border-purple-500/30 shadow-[inset_0_0_20px_rgba(168,85,247,0.05)]' : 'border-slate-800 hover:border-slate-700'
-                )}
-              >
-                <div className={cn(
-                  "w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg transition-transform group-hover:scale-110",
-                  player.is_bot ? 'bg-gradient-to-br from-purple-500 to-purple-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'
-                )}>
-                  {player.is_bot ? <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" /> : player.name[0].toUpperCase()}
-                </div>
-                <div className="flex flex-col flex-1">
-                  <span className={cn(
-                    "font-black text-base sm:text-lg tracking-tight truncate max-w-[120px]",
-                    player.is_bot ? 'text-purple-300' : 'text-white'
-                  )}>{player.name}</span>
-                  <div className="flex items-center gap-2">
-                    {player.is_host && (
-                      <span className="text-[9px] px-2 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full font-black uppercase tracking-tighter">Host</span>
-                    )}
-                    {player.is_bot && (
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] px-2 py-0.5 bg-slate-800 text-slate-400 border border-slate-700 rounded-full font-black uppercase tracking-tighter">IA</span>
-                        <span className={cn(
-                          "text-[9px] font-black uppercase tracking-tighter",
-                          player.bot_difficulty === 'easy' ? 'text-green-500' :
-                          player.bot_difficulty === 'moderate' ? 'text-yellow-500' : 'text-red-500'
-                        )}>
-                          {player.bot_difficulty === 'easy' ? 'Fácil' :
-                           player.bot_difficulty === 'moderate' ? 'Moderado' : 'Difícil'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {isHost && player.is_bot && (
-                  <button
-                    onClick={() => handleRemoveBot(player.id)}
-                    className="absolute -top-2 -right-2 p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-500 hover:text-red-500 hover:border-red-500/50 opacity-0 group-hover:opacity-100 transition-all shadow-xl"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </motion.div>
+            {players.map((player) => (
+              <PlayerItem 
+                key={player.id} 
+                player={player} 
+                isHost={isHost} 
+                onRemoveBot={handleRemoveBot} 
+              />
             ))}
             {Array.from({ length: Math.max(0, 4 - players.length) }).map((_, i) => (
               <div key={`empty-${i}`} className="h-[88px] border-2 border-dashed border-slate-800/50 rounded-3xl flex items-center justify-center text-slate-700 font-black uppercase tracking-widest text-[10px]">
@@ -300,3 +254,61 @@ export const LobbyView: React.FC<LobbyViewProps> = ({ room, players, myPlayer, o
     </div>
   );
 };
+
+const PlayerItem = memo(({ player, isHost, onRemoveBot }: any) => {
+  return (
+    <motion.div
+      layout
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.9, opacity: 0 }}
+      transition={{ type: "spring", damping: 20, stiffness: 300 }}
+      className={cn(
+        "flex items-center gap-3 sm:gap-4 bg-slate-900/50 p-4 sm:p-5 rounded-[1.5rem] sm:rounded-3xl border transition-all relative group",
+        player.is_bot ? 'border-purple-500/30 shadow-[inset_0_0_20px_rgba(168,85,247,0.05)]' : 'border-slate-800 hover:border-slate-700'
+      )}
+    >
+      <div className={cn(
+        "w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg transition-transform group-hover:scale-110",
+        player.is_bot ? 'bg-gradient-to-br from-purple-500 to-purple-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'
+      )}>
+        {player.is_bot ? <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-white" /> : (player.name?.[0]?.toUpperCase() || 'P')}
+      </div>
+      <div className="flex flex-col flex-1">
+        <span className={cn(
+          "font-black text-base sm:text-lg tracking-tight truncate max-w-[120px]",
+          player.is_bot ? 'text-purple-300' : 'text-white'
+        )}>{player.name}</span>
+        <div className="flex items-center gap-2">
+          {player.is_host && (
+            <span className="text-[9px] px-2 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full font-black uppercase tracking-tighter">Host</span>
+          )}
+          {player.is_bot && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] px-2 py-0.5 bg-slate-800 text-slate-400 border border-slate-700 rounded-full font-black uppercase tracking-tighter">IA</span>
+              <span className={cn(
+                "text-[9px] font-black uppercase tracking-tighter",
+                player.bot_difficulty === 'easy' ? 'text-green-500' :
+                player.bot_difficulty === 'moderate' ? 'text-yellow-500' : 'text-red-500'
+              )}>
+                {player.bot_difficulty === 'easy' ? 'Fácil' :
+                 player.bot_difficulty === 'moderate' ? 'Moderado' : 'Difícil'}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {isHost && player.is_bot && (
+        <button
+          onClick={() => onRemoveBot(player.id)}
+          className="absolute -top-2 -right-2 p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-500 hover:text-red-500 hover:border-red-500/50 opacity-0 group-hover:opacity-100 transition-all shadow-xl"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </motion.div>
+  );
+});
+
+PlayerItem.displayName = "PlayerItem";

@@ -27,7 +27,8 @@ export const GameView: React.FC<GameViewProps> = ({
   myPlayer, 
   myCards, 
   actions, 
-  logs 
+  logs,
+  onLeaveRoom
 }) => {
   const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);

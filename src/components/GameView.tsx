@@ -643,9 +643,9 @@ const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelec
         {showEmote && (
           <motion.div
             initial={{ scale: 0, y: 10, opacity: 0 }}
-            animate={{ scale: 1.5, y: -40, opacity: 1 }}
+            animate={{ scale: 1.5, y: -60, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute z-30 text-3xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+            className="absolute left-1/2 -translate-x-1/2 top-0 z-30 text-3xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
           >
             {opponent.current_emote}
           </motion.div>

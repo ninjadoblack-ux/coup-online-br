@@ -16,7 +16,8 @@ export const GameContainer: React.FC = () => {
     }
     return null;
   });
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<any | undefined>(undefined);
+  const [authChecked, setAuthChecked] = useState(false);
   const { room, players, myPlayer, myCards, actions, logs, loading } = useGameState(roomId);
 
   useEffect(() => {

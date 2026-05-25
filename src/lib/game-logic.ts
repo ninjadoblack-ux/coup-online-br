@@ -27,12 +27,22 @@ export function generateRoomCode(): string {
   return result;
 }
 
+export const ACTION_LABELS: Record<string, string> = {
+  'Income': 'Renda',
+  'Foreign Aid': 'Ajuda Externa',
+  'Tax': 'Taxa',
+  'Steal': 'Extorquir',
+  'Assassinate': 'Assassinar',
+  'Exchange': 'Trocar',
+  'Coup': 'Golpe de Estado'
+};
+
 export const ACTION_DESCRIPTIONS: Record<string, string> = {
-  'Income': 'Recebe 1 moeda do banco.',
-  'Foreign Aid': 'Recebe 2 moedas do banco (pode ser bloqueado pelo Duque).',
-  'Tax': 'Recebe 3 moedas do banco (requer Duque).',
-  'Steal': 'Rouba 2 moedas de um oponente (requer Capitão, pode ser bloqueado pelo Capitão ou Embaixador).',
-  'Assassinate': 'Paga 3 moedas para eliminar um cartão de um oponente (requer Assassino, pode ser bloqueado pela Condessa).',
-  'Exchange': 'Troca cartas com o baralho (requer Embaixador).',
-  'Coup': 'Paga 7 moedas para eliminar um cartão de um oponente (não pode ser contestado ou bloqueado).'
+  'Income': 'Recebe 1 moeda do banco. Não pode ser bloqueado ou contestado.',
+  'Foreign Aid': 'Recebe 2 moedas do banco. Pode ser bloqueado por quem tiver o Duque.',
+  'Tax': 'Recebe 3 moedas do banco. Ação do Duque. Pode ser contestada.',
+  'Steal': 'Rouba 2 moedas de um oponente. Ação do Capitão. Pode ser bloqueada pelo Capitão ou Embaixador.',
+  'Assassinate': 'Paga 3 moedas para eliminar uma carta de um oponente. Ação do Assassino. Pode ser bloqueada pela Condessa.',
+  'Exchange': 'Troca cartas com o baralho. Ação do Embaixador. Pode ser contestada.',
+  'Coup': 'Paga 7 moedas para eliminar obrigatoriamente uma carta de um oponente. Não pode ser contestado ou bloqueado.'
 };

@@ -73,9 +73,12 @@ export function useGameLogic(
 
           if (hasCard) {
             // Announcer was telling the truth: announcer keeps card, action executes, challenger loses influence
+            const matchedCardObj = cards!.find(c => c.card_type === requiredCard)!;
+            await swapCard(player.id, matchedCardObj.id, matchedCardObj.card_type);
+
             await supabase.from('game_logs').insert([{
               room_id: room!.id,
-              message: `${player.name} provou ter ${CARD_LABELS[requiredCard]}! Ação ${ACTION_LABELS[action.action_type]} segue adiante.`
+              message: `${player.name} provou ter ${CARD_LABELS[requiredCard]} e trocou a carta! Ação ${ACTION_LABELS[action.action_type]} segue adiante.`
             }]);
             if (challenger) await loseCard(challenger.id);
             shouldExecute = true;
@@ -111,10 +114,12 @@ export function useGameLogic(
 
           if (hasCard) {
             // Blocker was telling the truth: action stays blocked, challenger loses influence
-            const matchedCard = cards!.find(c => blockableBy.includes(c.card_type as any))!.card_type;
+            const matchedCardObj = cards!.find(c => blockableBy.includes(c.card_type as any))!;
+            await swapCard(blocker.id, matchedCardObj.id, matchedCardObj.card_type);
+
             await supabase.from('game_logs').insert([{
               room_id: room!.id,
-              message: `${blocker.name} provou ter ${CARD_LABELS[matchedCard]}! O bloqueio permanece.`
+              message: `${blocker.name} provou ter ${CARD_LABELS[matchedCardObj.card_type]} e trocou a carta! O bloqueio permanece.`
             }]);
             if (challenger) await loseCard(challenger.id);
             await refundCost(player, action.action_type);
@@ -168,6 +173,9 @@ export function useGameLogic(
           case 'Coup':
             if (action.target_id) await loseCard(action.target_id);
             break;
+          case 'Exchange':
+            await handleExchange(player.id);
+            break;
         }
       }
 
@@ -192,6 +200,40 @@ export function useGameLogic(
     } else if (actionType === 'Coup') {
       await updateCoins(player.id, (player.coins || 0) + 7);
     }
+  };
+
+  const handleExchange = async (playerId: string) => {
+    const { data: currentRoom } = await supabase.from('rooms').select('deck').eq('id', room!.id).single();
+    if (!currentRoom) return;
+
+    let deck = [...(currentRoom.deck as any[])];
+    const { data: myCards } = await supabase.from('player_cards').select('*').eq('player_id', playerId).eq('is_revealed', false);
+    if (!myCards) return;
+
+    // Standard Coup: Ambassador takes 2 cards, looks at them + their own cards, and puts 2 back
+    // For simplicity here: we'll just swap all unrevealed cards with new ones from the deck and shuffle the old ones back.
+    const oldCards = myCards.map(c => c.card_type);
+    const numToSwap = oldCards.length;
+    
+    const newCards = deck.splice(0, numToSwap);
+    deck.push(...oldCards);
+
+    // Shuffle deck
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+
+    await supabase.from('rooms').update({ deck }).eq('id', room!.id);
+    
+    for (let i = 0; i < numToSwap; i++) {
+      await supabase.from('player_cards').update({ card_type: newCards[i] }).eq('id', myCards[i].id);
+    }
+
+    await supabase.from('game_logs').insert([{
+      room_id: room!.id,
+      message: `${players.find(p => p.id === playerId)?.name} trocou suas cartas.`
+    }]);
   };
 
   const updateCoins = async (playerId: string, coins: number) => {
@@ -234,6 +276,27 @@ export function useGameLogic(
         }
       }
     }
+  };
+
+  const swapCard = async (playerId: string, cardId: string, oldCardType: string) => {
+    const { data: currentRoom } = await supabase.from('rooms').select('deck').eq('id', room!.id).single();
+    if (!currentRoom) return;
+
+    const deck = [...(currentRoom.deck as string[])];
+    deck.push(oldCardType);
+    
+    // Shuffle
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+
+    const newCard = deck.shift();
+
+    await Promise.all([
+      supabase.from('rooms').update({ deck }).eq('id', room!.id),
+      supabase.from('player_cards').update({ card_type: newCard }).eq('id', cardId)
+    ]);
   };
 
   const getNextPlayerId = (players: Player[], currentId: string) => {

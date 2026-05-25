@@ -1,14 +1,15 @@
 
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Room, Player, GameAction } from '@/types/game';
-import { ACTION_LABELS } from '@/lib/game-logic';
+import { Room, Player, GameAction, PlayerCard } from '@/types/game';
+import { ACTION_LABELS, ACTION_REQUIRED_CARDS } from '@/lib/game-logic';
 
 export function useBotLogic(
   room: Room | null,
   players: Player[],
   myPlayer: Player | null,
-  actions: GameAction[]
+  actions: GameAction[],
+  allCards: PlayerCard[]
 ) {
   const isHost = myPlayer?.is_host;
   const thinkingRef = useRef<Record<string, boolean>>({});

@@ -75,8 +75,10 @@ export const TutorialDialog: React.FC = () => {
           .eq('id', user.id)
           .single();
 
-        if (profile && !profile.has_completed_tutorial) {
+        const forceShow = localStorage.getItem('force_show_tutorial') === 'true';
+        if (forceShow || (profile && !profile.has_completed_tutorial)) {
           setIsOpen(true);
+          if (forceShow) localStorage.removeItem('force_show_tutorial');
         }
       } catch (err) {
         console.error("Erro ao verificar status do tutorial:", err);

@@ -3,6 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CardType } from "@/types/game";
+import { CARD_LABELS } from "@/lib/game-logic";
 
 interface GameCardProps {
   type?: CardType;

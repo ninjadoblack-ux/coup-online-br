@@ -104,7 +104,7 @@ export const GameView: React.FC<GameViewProps> = ({
         target_id: targetId,
         action_type: actionType,
         status: 'pending',
-        expires_at: new Date(Date.now() + (actionType === 'Income' ? 2000 : 10000)).toISOString()
+        expires_at: new Date(Date.now() + (actionType === 'Income' ? 2000 : 12000)).toISOString()
       }]);
 
       await supabase.from('game_logs').insert([{

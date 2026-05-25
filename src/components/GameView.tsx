@@ -132,8 +132,8 @@ export const GameView: React.FC<GameViewProps> = ({
             <span className="text-xl font-black text-purple-400">C</span>
           </div>
           <div>
-            <h1 className="text-sm font-black text-white tracking-widest uppercase">Protocolo // Coup</h1>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Neural Sync: Active</p>
+            <h1 className="text-sm font-black text-white tracking-widest uppercase">Protocolo // Golpe</h1>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Sincronização Neural: Ativa</p>
           </div>
         </div>
         

@@ -121,6 +121,13 @@ export function useBotLogic(
       }
 
 
+      // Deduct coins immediately for bots as well
+      if (actionType === 'Assassinate') {
+        await supabase.from('players').update({ coins: bot.coins - 3 }).eq('id', bot.id);
+      } else if (actionType === 'Coup') {
+        await supabase.from('players').update({ coins: bot.coins - 7 }).eq('id', bot.id);
+      }
+
       await supabase.from('game_actions').insert([{
         room_id: room!.id,
         player_id: bot.id,

@@ -56,3 +56,13 @@ export const ACTION_DESCRIPTIONS: Record<string, string> = {
   'Exchange': 'Troca cartas com o baralho. Ação do Embaixador. Pode ser contestada.',
   'Coup': 'Paga 7 moedas para eliminar obrigatoriamente uma carta de um oponente. Não pode ser contestado ou bloqueado.'
 };
+
+export const ACTION_REQUIRED_CARDS: Record<string, CardType | null> = {
+  'Income': null,
+  'Foreign Aid': null,
+  'Tax': 'Duke',
+  'Steal': 'Captain',
+  'Assassinate': 'Assassin',
+  'Exchange': 'Ambassador',
+  'Coup': null
+};

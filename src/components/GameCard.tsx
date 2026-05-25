@@ -43,20 +43,30 @@ export const GameCard: React.FC<GameCardProps> = ({
   if (!isRevealed) {
     return (
       <motion.div
-        whileHover={isSelectable ? { scale: 1.05, y: -5 } : {}}
+        whileHover={isSelectable ? { scale: 1.05, y: -10 } : {}}
         onClick={isSelectable ? onClick : undefined}
         className={cn(
-          "relative w-24 h-36 md:w-32 md:h-48 rounded-xl border-2 border-slate-700 bg-slate-900 overflow-hidden cursor-default",
+          "relative w-24 h-36 md:w-32 md:h-48 rounded-[1.5rem] border-2 border-slate-800 bg-slate-950 overflow-hidden cursor-default shadow-2xl group",
           isSelectable && "cursor-pointer border-purple-500/50 hover:border-purple-400",
-          isSelected && "ring-4 ring-purple-500 border-purple-400",
-          compact && "w-16 h-24 md:w-20 md:h-30",
+          isSelected && "ring-4 ring-purple-500 border-purple-400 scale-105",
+          compact && "w-16 h-24 md:w-20 md:h-30 rounded-xl",
           className
         )}
       >
-        <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-800 to-slate-950">
-          <div className="w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center opacity-30">
-            <span className="text-2xl font-bold text-slate-500 italic">C</span>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_oklch(0.3_0.1_260),_transparent)] opacity-50" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-slate-900 flex items-center justify-center relative">
+             <div className="absolute inset-0 border border-purple-500/10 rounded-full animate-[spin_10s_linear_infinite]" />
+             <span className="text-4xl font-black text-slate-800 tracking-tighter italic group-hover:text-purple-900 transition-colors">C</span>
           </div>
+          <div className="mt-4 flex gap-1">
+             <div className="w-1 h-1 rounded-full bg-slate-800" />
+             <div className="w-1 h-1 rounded-full bg-slate-800" />
+             <div className="w-1 h-1 rounded-full bg-slate-800" />
+          </div>
+        </div>
+        <div className="absolute bottom-2 inset-x-0 flex justify-center opacity-10">
+           <span className="text-[6px] font-black uppercase tracking-[0.4em]">Security Layer v4.2</span>
         </div>
       </motion.div>
     );
@@ -67,26 +77,39 @@ export const GameCard: React.FC<GameCardProps> = ({
 
   return (
     <motion.div
-      initial={{ rotateY: 90 }}
-      animate={{ rotateY: 0 }}
+      initial={{ rotateY: 90, opacity: 0 }}
+      animate={{ rotateY: 0, opacity: 1 }}
       className={cn(
-        "relative w-24 h-36 md:w-32 md:h-48 rounded-xl border-2 bg-slate-900 flex flex-col items-center justify-between py-4 transition-all",
+        "relative w-24 h-36 md:w-32 md:h-48 rounded-[1.5rem] border-2 bg-slate-950 flex flex-col items-center justify-between p-4 transition-all shadow-2xl overflow-hidden",
         colorClass,
-        compact && "w-16 h-24 md:w-20 md:h-30 py-2",
+        compact && "w-16 h-24 md:w-20 md:h-30 p-2 rounded-xl",
         className
       )}
     >
-      <span className={cn("text-xs md:text-sm font-bold uppercase tracking-wider", compact && "text-[10px]")}>
-        {type}
-      </span>
-      <div className={cn("my-2", compact && "my-1 scale-75")}>
+      <div className="absolute top-0 left-0 w-full h-12 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+      
+      <div className="flex flex-col items-center gap-1 z-10">
+        <span className={cn("text-[10px] md:text-[12px] font-black uppercase tracking-[0.2em] text-white", compact && "text-[8px] tracking-widest")}>
+          {type}
+        </span>
+        <div className="w-8 h-[1px] bg-white/20" />
+      </div>
+
+      <div className={cn("my-2 relative z-10", compact && "my-1 scale-75")}>
+        <div className="absolute inset-0 blur-xl opacity-20 bg-current rounded-full" />
         {icon}
       </div>
-      <div className="flex flex-col items-center gap-1">
-        <div className="w-8 h-1 bg-slate-700 rounded-full" />
-        <span className={cn("text-[8px] md:text-[10px] text-slate-500 uppercase", compact && "hidden")}>
-          Influence
-        </span>
+
+      <div className="flex flex-col items-center gap-2 z-10 w-full">
+        <div className="w-full flex justify-center items-center gap-1">
+           <div className="h-[1px] flex-1 bg-white/5" />
+           <div className="px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
+              <span className={cn("text-[8px] font-black text-white/40 uppercase tracking-tighter", compact && "hidden")}>
+                Card Data
+              </span>
+           </div>
+           <div className="h-[1px] flex-1 bg-white/5" />
+        </div>
       </div>
     </motion.div>
   );

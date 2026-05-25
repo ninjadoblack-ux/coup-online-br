@@ -326,7 +326,7 @@ export const GameView: React.FC<GameViewProps> = ({
                   <ActionBtn 
                     key={action}
                     action={action}
-                    disabled={!isMyTurn || pendingAction !== null}
+                    disabled={!isMyTurn || pendingAction !== null || (myPlayer.coins >= 10 && action !== 'Coup')}
                     isMyTurn={isMyTurn}
                     onClick={() => handleAction(action)}
                   />

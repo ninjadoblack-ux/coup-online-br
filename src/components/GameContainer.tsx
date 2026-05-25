@@ -5,6 +5,7 @@ import { HomeView } from "./HomeView";
 import { LobbyView } from "./LobbyView";
 import { GameView } from "./GameView";
 import { AuthOverlay } from "./AuthOverlay";
+import { TutorialDialog } from "./TutorialDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
@@ -62,23 +63,24 @@ export const GameContainer: React.FC = () => {
     );
   }
 
-  if (!roomId || !room) {
-    return <HomeView onRoomCreated={setRoomId} onRoomJoined={setRoomId} />;
-  }
-
-  if (room.status === 'waiting') {
-    return <LobbyView room={room} players={players} myPlayer={myPlayer} onLeaveRoom={handleLeaveRoom} />;
-  }
-
   return (
-    <GameView 
-      room={room} 
-      players={players} 
-      myPlayer={myPlayer} 
-      myCards={myCards} 
-      actions={actions} 
-      logs={logs} 
-      onLeaveRoom={handleLeaveRoom}
-    />
+    <>
+      <TutorialDialog />
+      {(!roomId || !room) ? (
+        <HomeView onRoomCreated={setRoomId} onRoomJoined={setRoomId} />
+      ) : room.status === 'waiting' ? (
+        <LobbyView room={room} players={players} myPlayer={myPlayer} onLeaveRoom={handleLeaveRoom} />
+      ) : (
+        <GameView 
+          room={room} 
+          players={players} 
+          myPlayer={myPlayer} 
+          myCards={myCards} 
+          actions={actions} 
+          logs={logs} 
+          onLeaveRoom={handleLeaveRoom}
+        />
+      )}
+    </>
   );
 };

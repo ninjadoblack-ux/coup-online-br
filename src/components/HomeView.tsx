@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogIn, Plus } from "lucide-react";
+import { LogIn, Plus, BookOpen } from "lucide-react";
 import { generateRoomCode } from "@/lib/game-logic";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -115,7 +115,23 @@ export const HomeView: React.FC<HomeViewProps> = ({ onRoomCreated, onRoomJoined 
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-12 px-4">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-12 px-4 relative">
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-slate-500 hover:text-purple-400 gap-2 font-bold"
+          onClick={() => {
+            // We can trigger it by clearing the localStorage or just calling the state if we exported it
+            // For now, let's just make it clear the DB flag or we can add a state here
+            localStorage.setItem('force_show_tutorial', 'true');
+            window.location.reload(); // Simple way to re-trigger the check
+          }}
+        >
+          <BookOpen className="w-4 h-4" /> REVER TUTORIAL
+        </Button>
+      </div>
+
       <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

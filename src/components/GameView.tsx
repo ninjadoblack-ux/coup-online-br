@@ -86,7 +86,7 @@ export const GameView: React.FC<GameViewProps> = ({
 
       await supabase.from('game_logs').insert([{
         room_id: room.id,
-        message: `${myPlayer.name} anunciou ${actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
+        message: `${myPlayer.name} anunciou ${ACTION_LABELS[actionType] || actionType}${targetId ? ` contra ${players.find(p => p.id === targetId)?.name}` : ''}.`
       }]);
 
       setIsSelectingTarget(null);

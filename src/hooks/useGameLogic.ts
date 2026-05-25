@@ -122,9 +122,10 @@ export function useGameLogic(
           } else {
             // Blocker bluff caught: blocker loses a card, action executes normally
             await loseCard(blocker.id);
+            const blockDesc = blockableBy.map(c => CARD_LABELS[c]).join(' ou ');
             await supabase.from('game_logs').insert([{
               room_id: room!.id,
-              message: `${blocker.name} estava blefando sobre o bloqueio! Ação ${ACTION_LABELS[action.action_type]} de ${player.name} executa.`
+              message: `${blocker.name} estava blefando sobre ter ${blockDesc}! Ação ${ACTION_LABELS[action.action_type]} de ${player.name} executa.`
             }]);
             shouldExecute = true;
           }

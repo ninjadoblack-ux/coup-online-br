@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Player, Room, PlayerCard, GameAction, GameLog } from "@/types/game";
 import { GameCard } from "./GameCard";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export const GameView: React.FC<GameViewProps> = ({
   // Bot Logic Hook
   useBotLogic(room, players, myPlayer, actions);
   
-  const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id && p.status === 'alive'), [players, myPlayer?.id]);
+  const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
   const pendingAction = useMemo(() => actions.length > 0 ? actions[0] : null, [actions]);
 
@@ -68,7 +68,6 @@ export const GameView: React.FC<GameViewProps> = ({
   const handleAction = useCallback(async (actionType: string, targetId: string | null = null) => {
     if (!myPlayer || !isMyTurn) return;
 
-    // Check if targeting is needed
     if (['Assassinate', 'Steal', 'Coup'].includes(actionType) && !targetId) {
       setIsSelectingTarget(actionType);
       return;
@@ -102,8 +101,6 @@ export const GameView: React.FC<GameViewProps> = ({
 
     try {
       if (type === 'allow') {
-        // Just logic to mark this player as "allowed"
-        // For MVP, if anyone clicks Challenge/Block it stops, otherwise it proceeds on timer
         toast.info("Você permitiu a ação.");
       } else if (type === 'challenge') {
         await supabase
@@ -149,7 +146,7 @@ export const GameView: React.FC<GameViewProps> = ({
 
       {/* Opponents Layout */}
       <div className="flex justify-center gap-3 sm:gap-6 px-4 py-2 overflow-x-auto no-scrollbar">
-        {players.filter(p => p.id !== myPlayer?.id).map(opponent => (
+        {opponents.map(opponent => (
           <OpponentCard 
             key={opponent.id}
             opponent={opponent}
@@ -165,7 +162,6 @@ export const GameView: React.FC<GameViewProps> = ({
         <div className="w-full max-w-2xl aspect-[2/1] rounded-[100px] sm:rounded-[200px] border-[1px] border-slate-800 bg-gradient-to-b from-slate-900/20 to-slate-950/40 relative shadow-2xl flex flex-col items-center justify-center group overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_oklch(0.5_0.2_280_/_0.03),_transparent)]" />
           
-          {/* Decorative center element */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
              <div className="w-[80%] h-[80%] border-2 border-dashed border-purple-500 rounded-full animate-[spin_20s_linear_infinite]" />
              <div className="absolute w-40 h-40 border-2 border-purple-500 rounded-full" />
@@ -197,7 +193,7 @@ export const GameView: React.FC<GameViewProps> = ({
             <ScrollArea className="h-full w-full px-6">
               <div className="flex flex-col gap-2">
                 <AnimatePresence>
-                  {logs.slice(-10).map((log, i) => {
+                  {logs.slice(-10).map((log) => {
                     const isBotMessage = players.some(p => p.is_bot && log.message.startsWith(p.name));
                     return (
                       <motion.div 
@@ -282,7 +278,6 @@ export const GameView: React.FC<GameViewProps> = ({
       <div className="bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 p-3 sm:p-6 z-20">
         <div className="max-w-5xl mx-auto flex flex-col xl:flex-row items-center gap-4 sm:gap-10">
           
-          {/* Player Info & Cards */}
           <div className="flex items-center gap-4 sm:gap-8">
             <div className="flex flex-col items-center gap-1.5">
                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-700 p-[2px] shadow-lg">
@@ -314,7 +309,6 @@ export const GameView: React.FC<GameViewProps> = ({
             </div>
           </div>
 
-          {/* Action Grid */}
           <div className="flex-1 w-full">
              <div className="flex items-center justify-between mb-2 sm:mb-4">
                 <div className="flex items-center gap-2">
@@ -325,31 +319,15 @@ export const GameView: React.FC<GameViewProps> = ({
                 </div>
              </div>
              <div className="grid grid-cols-2 xs:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-3">
-              <TooltipProvider>
+              <TooltipProvider delayDuration={300}>
                 {Object.keys(ACTION_DESCRIPTIONS).map((action) => (
-                  <Tooltip key={action}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        disabled={!isMyTurn || pendingAction !== null}
-                        variant="outline"
-                        className={cn(
-                          "h-12 sm:h-14 text-[9px] sm:text-[10px] font-black uppercase tracking-wider border-slate-800 bg-slate-900/50 hover:bg-purple-600 hover:text-white hover:border-purple-400 transition-all rounded-xl relative group",
-                          isMyTurn && "border-slate-700 ring-1 ring-white/5",
-                          ["Coup", "Assassinate"].includes(action) && "hover:bg-red-600 hover:border-red-400"
-                        )}
-                        onClick={() => handleAction(action)}
-                      >
-                        {ACTION_LABELS[action] || action}
-                        <Info className="absolute top-1 right-1 w-2.5 h-2.5 opacity-20 group-hover:opacity-100 transition-opacity" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-slate-900 border-slate-800 text-white p-3 max-w-xs rounded-xl shadow-2xl">
-                      <div className="space-y-1">
-                        <p className="font-black uppercase tracking-widest text-xs text-purple-400">{ACTION_LABELS[action]}</p>
-                        <p className="text-[10px] text-slate-300 leading-relaxed font-medium">{ACTION_DESCRIPTIONS[action]}</p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
+                  <ActionBtn 
+                    key={action}
+                    action={action}
+                    disabled={!isMyTurn || pendingAction !== null}
+                    isMyTurn={isMyTurn}
+                    onClick={() => handleAction(action)}
+                  />
                 ))}
               </TooltipProvider>
             </div>
@@ -382,7 +360,7 @@ const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelec
           "w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg shadow-inner",
           opponent.is_bot ? "bg-gradient-to-br from-purple-500 to-purple-800" : "bg-gradient-to-br from-slate-700 to-slate-900"
         )}>
-          {opponent.is_bot ? <Bot className="w-5 h-5 text-white" /> : opponent.name[0].toUpperCase()}
+          {opponent.is_bot ? <Bot className="w-5 h-5 text-white" /> : (opponent.name?.[0]?.toUpperCase() || 'P')}
         </div>
         <div className="flex flex-col">
           <span className={cn(
@@ -433,7 +411,7 @@ const ActionBtn = memo(({ action, disabled, isMyTurn, onClick }: any) => {
       <TooltipContent className="bg-slate-900 border-slate-800 text-white p-3 max-w-xs rounded-xl shadow-2xl">
         <div className="space-y-1">
           <p className="font-black text-xs uppercase tracking-widest text-purple-400">{ACTION_LABELS[action] || action}</p>
-          <p className="text-[10px] leading-relaxed text-slate-300">{ACTION_DESCRIPTIONS[action]}</p>
+          <p className="text-[10px] leading-relaxed text-slate-300 font-medium">{ACTION_DESCRIPTIONS[action]}</p>
         </div>
       </TooltipContent>
     </Tooltip>

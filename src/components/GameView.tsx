@@ -44,8 +44,9 @@ export const GameView: React.FC<GameViewProps> = ({
   const [isSelectingTarget, setIsSelectingTarget] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
-  // Bot Logic Hook
+  // Game Engine & Bot Logic Hooks (Host only)
   useBotLogic(room, players, myPlayer, actions);
+  useGameLogic(room, players, myPlayer, actions);
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);

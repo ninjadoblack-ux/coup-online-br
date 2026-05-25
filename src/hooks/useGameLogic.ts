@@ -46,13 +46,13 @@ export function useGameLogic(
       // 1. Execute the action effects
       switch (action.action_type) {
         case 'Income':
-          await updateCoins(player.id, player.coins + 1);
+          await updateCoins(player.id, (player.coins || 0) + 1);
           break;
         case 'Foreign Aid':
-          await updateCoins(player.id, player.coins + 2);
+          await updateCoins(player.id, (player.coins || 0) + 2);
           break;
         case 'Tax':
-          await updateCoins(player.id, player.coins + 3);
+          await updateCoins(player.id, (player.coins || 0) + 3);
           break;
         case 'Steal':
           if (action.target_id) {

@@ -329,14 +329,14 @@ export const GameView: React.FC<GameViewProps> = ({
                <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Moedas</span>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-3 md:gap-6">
               {myCards.map(card => (
                 <GameCard 
                   key={card.id} 
                   type={card.card_type} 
                   isRevealed={true}
                   className={cn(
-                    "shadow-2xl transition-transform hover:-translate-y-4 hover:rotate-2",
+                    "shadow-2xl transition-all duration-500 hover:-translate-y-6 hover:rotate-1 hover:scale-105",
                     card.is_revealed && "grayscale opacity-50 ring-4 ring-red-500/50"
                   )}
                 />

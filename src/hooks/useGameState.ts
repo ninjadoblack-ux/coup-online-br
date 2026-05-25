@@ -9,6 +9,7 @@ export function useGameState(roomId: string | null) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [myPlayer, setMyPlayer] = useState<Player | null>(null);
   const [myCards, setMyCards] = useState<PlayerCard[]>([]);
+  const [allCards, setAllCards] = useState<PlayerCard[]>([]);
   const [actions, setActions] = useState<GameAction[]>([]);
   const [logs, setLogs] = useState<GameLog[]>([]);
   const [loading, setLoading] = useState(true);

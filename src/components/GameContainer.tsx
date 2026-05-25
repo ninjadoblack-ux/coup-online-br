@@ -67,7 +67,7 @@ export const GameContainer: React.FC = () => {
   }
 
   if (room.status === 'waiting') {
-    return <LobbyView room={room} players={players} myPlayer={myPlayer} />;
+    return <LobbyView room={room} players={players} myPlayer={myPlayer} onLeaveRoom={handleLeaveRoom} />;
   }
 
   return (

@@ -49,6 +49,10 @@ export const GameContainer: React.FC = () => {
     return <AuthOverlay />;
   }
 
+  const handleLeaveRoom = () => {
+    setRoomId(null);
+  };
+
   if (roomId && loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">

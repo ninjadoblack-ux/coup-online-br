@@ -164,32 +164,37 @@ export const GameView: React.FC<GameViewProps> = ({
     }
   }, [myPlayer, isMyTurn, room.id, players, myCards]);
 
-  const handleReaction = useCallback(async (type: 'allow' | 'challenge' | 'block') => {
+  const handleReaction = useCallback(async (type: 'allow' | 'challenge' | 'block' | 'think') => {
     if (!pendingAction || !myPlayer) return;
 
     try {
+      if (type === 'think') {
+        const currentExpires = pendingAction.expires_at ? new Date(pendingAction.expires_at).getTime() : Date.now();
+        await supabase
+          .from('game_actions')
+          .update({ 
+            expires_at: new Date(currentExpires + 5000).toISOString() 
+          })
+          .eq('id', pendingAction.id);
+        
+        await supabase.from('game_logs').insert([{
+          room_id: room.id,
+          message: `${myPlayer.name} está pensando... (+5s)`
+        }]);
+        return;
+      }
+
       if (type === 'allow') {
-        if (pendingAction.status === 'blocking') {
-          // Allowing a block means the action is now permanently blocked
-          await supabase
-            .from('game_actions')
-            .update({ status: 'blocked' })
-            .eq('id', pendingAction.id);
-          await supabase.from('game_logs').insert([{
-            room_id: room.id,
-            message: `${myPlayer.name} permitiu o bloqueio.`
-          }]);
-        } else {
-          // Encurta o expires_at para que o host resolva imediatamente
-          await supabase
-            .from('game_actions')
-            .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
-            .eq('id', pendingAction.id);
-          await supabase.from('game_logs').insert([{
-            room_id: room.id,
-            message: `${myPlayer.name} permitiu a ação.`
-          }]);
-        }
+        const newAcceptedBy = [...(pendingAction.accepted_by || []), myPlayer.id];
+        await supabase
+          .from('game_actions')
+          .update({ accepted_by: newAcceptedBy })
+          .eq('id', pendingAction.id);
+        
+        await supabase.from('game_logs').insert([{
+          room_id: room.id,
+          message: `${myPlayer.name} permitiu a ação.`
+        }]);
       } else if (type === 'challenge') {
         const newStatus = pendingAction.status === 'blocking' ? 'block_challenged' : 'challenged';
         await supabase
@@ -214,7 +219,7 @@ export const GameView: React.FC<GameViewProps> = ({
           .update({ 
             status: 'blocking',
             blocker_id: myPlayer.id,
-            expires_at: new Date(Date.now() + 12000).toISOString() // Reset timer for challenge to block
+            expires_at: new Date(Date.now() + 10000).toISOString()
           })
           .eq('id', pendingAction.id);
         
@@ -228,6 +233,102 @@ export const GameView: React.FC<GameViewProps> = ({
       toast.error("Erro ao reagir.");
     }
   }, [pendingAction, myPlayer, room.id, players]);
+
+  const handleRevealCardChoice = async (cardId: string) => {
+    if (!pendingAction || !myPlayer) return;
+    try {
+      const card = myCards.find(c => c.id === cardId);
+      await supabase.from('player_cards').update({ is_revealed: true }).eq('id', cardId);
+      
+      await supabase.from('game_logs').insert([{
+        room_id: room.id,
+        message: `${myPlayer.name} revelou um ${card?.card_type}!`
+      }]);
+
+      // Move state forward based on next_status
+      let nextStatus: any = pendingAction.next_status || 'completed';
+      
+      // If we were executing_final, we transition back to something resolveAction picks up
+      if (nextStatus === 'executing_final') {
+        nextStatus = 'pending'; // This will trigger resolveAction in Host
+      }
+
+      await supabase.from('game_actions').update({ 
+        status: nextStatus,
+        acting_player_id: null 
+      }).eq('id', pendingAction.id);
+      
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao revelar carta.");
+    }
+  };
+
+  const handleExchangeConfirm = async (keptCardIds: string[]) => {
+    if (!pendingAction || !myPlayer) return;
+    try {
+      const currentCards = myCards.filter(c => !c.is_revealed);
+      const tempCards = pendingAction.temporary_cards || [];
+      const allCards = [...currentCards.map(c => c.card_type), ...tempCards];
+      
+      // The keptCardIds will tell us which indexes or types to keep
+      // But let's simplify: the UI should pass the final array of types to keep.
+      // Wait, let's just use types for simplicity since it's a swap.
+    } catch (err) {
+       console.error(err);
+    }
+  };
+
+  const handleExchangeFinal = async (newCardTypes: CardType[]) => {
+    if (!pendingAction || !myPlayer) return;
+    try {
+      const currentCards = myCards.filter(c => !c.is_revealed);
+      const tempCards = pendingAction.temporary_cards || [];
+      const allCombined = [...currentCards.map(c => c.card_type), ...tempCards];
+      
+      // Update my cards
+      for (let i = 0; i < currentCards.length; i++) {
+        await supabase.from('player_cards').update({ card_type: newCardTypes[i] }).eq('id', currentCards[i].id);
+      }
+
+      // Remaining cards go back to deck
+      const keptSet = [...newCardTypes];
+      const returnedCards: CardType[] = [];
+      let tempAll = [...allCombined];
+      
+      keptSet.forEach(k => {
+        const idx = tempAll.indexOf(k);
+        if (idx > -1) tempAll.splice(idx, 1);
+      });
+      returnedCards.push(...tempAll);
+
+      const { data: currentRoom } = await supabase.from('rooms').select('deck').eq('id', room.id).single();
+      if (currentRoom) {
+        const deck = [...(currentRoom.deck as CardType[]), ...returnedCards];
+        // Shuffle
+        for (let i = deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        await supabase.from('rooms').update({ deck }).eq('id', room.id);
+      }
+
+      await supabase.from('game_logs').insert([{
+        room_id: room.id,
+        message: `${myPlayer.name} concluiu a troca de cartas.`
+      }]);
+
+      await supabase.from('game_actions').update({ 
+        status: 'completed',
+        acting_player_id: null 
+      }).eq('id', pendingAction.id);
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro na troca.");
+    }
+  };
+
 
   const handleSendEmote = useCallback(async (emote: string) => {
     if (!myPlayer) return;

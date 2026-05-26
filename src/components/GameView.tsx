@@ -915,10 +915,10 @@ const OpponentCard = memo(({ opponent, currentTurnId, isSelectingTarget, onSelec
       animate={{ y: 0, opacity: 1 }}
       onClick={onSelect}
       className={cn(
-        "flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-4 rounded-[1.5rem] sm:rounded-[2rem] bg-slate-900/40 backdrop-blur-md border transition-all relative group min-w-[120px] sm:min-w-0",
-        currentTurnId === opponent.id ? "border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.2)]" : "border-slate-800",
+        "flex flex-col items-center gap-1.5 p-2 sm:p-4 rounded-[1.2rem] sm:rounded-[2rem] bg-slate-900/40 backdrop-blur-md border transition-all relative group min-w-[100px] sm:min-w-0",
+        currentTurnId === opponent.id ? "border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)] bg-purple-500/5" : "border-slate-800",
         opponent.status === 'dead' && "grayscale opacity-30",
-        isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse"
+        isSelectingTarget && opponent.status === 'alive' && "cursor-pointer border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse scale-105"
       )}
     >
       <AnimatePresence>

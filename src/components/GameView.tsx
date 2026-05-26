@@ -798,45 +798,65 @@ export const GameView: React.FC<GameViewProps> = ({
       </AnimatePresence>
 
       {/* Bottom Interface - Player Panel */}
-      <div className="bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/50 p-3 sm:p-6 z-20 relative">
+      <div className="bg-slate-900/90 backdrop-blur-2xl border-t border-slate-800/50 p-4 sm:p-6 z-20 relative">
         {/* Emote Picker */}
-        <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex gap-1 sm:gap-2 bg-slate-950/90 backdrop-blur-xl p-2 rounded-2xl border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.2)] z-30 ring-1 ring-white/10">
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-1 bg-slate-950/95 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 shadow-2xl z-30 ring-1 ring-white/5">
           {EMOTES.map(emote => (
             <button 
               key={emote}
               onClick={() => handleSendEmote(emote)}
-              className="text-xl sm:text-2xl hover:scale-125 transition-all active:scale-90 px-1 hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+              className="text-lg sm:text-2xl hover:scale-125 transition-all active:scale-90 px-1"
             >
               {emote}
             </button>
           ))}
         </div>
 
-        <div className="max-w-5xl mx-auto flex flex-col xl:flex-row items-center gap-4 sm:gap-10">
-          
-          <div className="flex items-center gap-4 sm:gap-8 relative">
-            <AnimatePresence>
-              {showMyEmote && (
-                <motion.div
-                  initial={{ scale: 0, y: 0, opacity: 0 }}
-                  animate={{ scale: 1.5, y: -60, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  className="absolute left-1/2 -translate-x-1/2 top-0 z-30 text-4xl pointer-events-none drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
-                >
-                  {myPlayer?.current_emote}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="flex flex-col items-center gap-1.5">
-               <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-700 p-[2px] shadow-lg">
-                  <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center gap-1 sm:gap-1.5">
-                    <img src={coinGold} alt="moedas" className="w-4 h-4 sm:w-6 sm:h-6 drop-shadow-[0_0_6px_rgba(234,179,8,0.5)]" />
-                    <span className="text-lg sm:text-xl font-black text-white">{myPlayer?.coins || 0}</span>
-                  </div>
-               </div>
-               <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Moedas</span>
+        <div className="max-w-5xl mx-auto flex flex-col gap-4">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center shadow-inner">
+                  <span className="text-xl font-black text-white">{myPlayer?.name?.[0]?.toUpperCase()}</span>
+                </div>
+                {isMyTurn && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full border-2 border-slate-900 animate-ping" />
+                )}
+              </div>
+              <div>
+                <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Status Neural</h4>
+                <p className={cn("text-xs font-black uppercase tracking-tight", isMyTurn ? "text-purple-400" : "text-slate-400")}>
+                  {isMyTurn ? "Seu Turno" : "Aguardando"}
+                </p>
+              </div>
             </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-1.5">
+                  <img src={coinGold} alt="moedas" className="w-5 h-5 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" />
+                  <span className="text-xl font-black text-white leading-none">{myPlayer?.coins || 0}</span>
+                </div>
+                <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest mt-0.5">Créditos</span>
+              </div>
+              
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="rounded-xl border-slate-800 bg-slate-950/50 h-10 w-10 relative"
+                onClick={() => setIsLogOpen(true)}
+              >
+                <HistoryIcon className="w-4 h-4 text-slate-400" />
+                {logs.length > 0 && (
+                  <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-10">
+            <div className="flex gap-2 sm:gap-4 justify-center w-full md:w-auto">
+
 
             <div className="flex gap-2 sm:gap-4 md:gap-6">
               {myCards.map(card => (

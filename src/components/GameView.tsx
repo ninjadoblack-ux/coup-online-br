@@ -523,6 +523,117 @@ export const GameView: React.FC<GameViewProps> = ({
         </motion.div>
       </div>
 
+      {/* Reveal Overlay */}
+      <AnimatePresence>
+        {pendingAction && pendingAction.status === 'awaiting_reveal' && pendingAction.acting_player_id === myPlayer?.id && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-slate-900 border-2 border-red-500/50 rounded-[3rem] p-10 max-w-2xl w-full shadow-[0_0_50px_rgba(239,68,68,0.2)] text-center"
+            >
+              <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">PERDA DE INFLUÊNCIA</h3>
+              <p className="text-slate-400 mb-8 font-bold uppercase tracking-widest text-sm">Selecione uma carta para sacrificar</p>
+              
+              <div className="flex justify-center gap-6">
+                {myCards.filter(c => !c.is_revealed).map(card => (
+                  <div key={card.id} className="flex flex-col gap-4">
+                    <GameCard 
+                      card={card} 
+                      isMe={true} 
+                      onClick={() => handleRevealCardChoice(card.id)}
+                    />
+                    <Button 
+                      variant="destructive"
+                      className="font-black uppercase tracking-widest text-xs"
+                      onClick={() => handleRevealCardChoice(card.id)}
+                    >
+                      Sacrificar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Exchange Overlay */}
+      <AnimatePresence>
+        {pendingAction && pendingAction.status === 'exchanging' && pendingAction.acting_player_id === myPlayer?.id && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-slate-900 border-2 border-purple-500/50 rounded-[3rem] p-8 max-w-3xl w-full shadow-[0_0_50px_rgba(168,85,247,0.2)]"
+            >
+              <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight text-center">PROTOCOLO DE TROCA</h3>
+              <p className="text-slate-400 mb-8 font-bold uppercase tracking-widest text-sm text-center">
+                Selecione as {myCards.filter(c => !c.is_revealed).length} cartas que deseja manter
+              </p>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                {[...myCards.filter(c => !c.is_revealed).map(c => c.card_type), ...(pendingAction.temporary_cards || [])].map((cardType, idx) => {
+                  const isSelected = exchangeSelectedCards.includes(cardType);
+                  const canSelect = exchangeSelectedCards.length < myCards.filter(c => !c.is_revealed).length;
+                  
+                  return (
+                    <motion.div 
+                      key={`${cardType}-${idx}`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        if (isSelected) {
+                          setExchangeSelectedCards(prev => prev.filter(c => c !== cardType));
+                        } else if (canSelect) {
+                          setExchangeSelectedCards(prev => [...prev, cardType]);
+                        }
+                      }}
+                      className={cn(
+                        "aspect-[2/3] rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center p-4 text-center gap-2",
+                        isSelected 
+                          ? "bg-purple-600/20 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]" 
+                          : "bg-slate-800/50 border-slate-700 hover:border-slate-500"
+                      )}
+                    >
+                      <span className={cn(
+                        "text-xs font-black uppercase tracking-tighter",
+                        isSelected ? "text-purple-400" : "text-slate-400"
+                      )}>{CARD_LABELS[cardType]}</span>
+                      <div className={cn(
+                        "w-4 h-4 rounded-full border-2",
+                        isSelected ? "bg-purple-500 border-purple-400" : "border-slate-600"
+                      )} />
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-center">
+                <Button 
+                  size="lg"
+                  disabled={exchangeSelectedCards.length !== myCards.filter(c => !c.is_revealed).length}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-black uppercase tracking-widest px-12 py-6 rounded-2xl shadow-lg disabled:opacity-50"
+                  onClick={() => handleExchangeFinal(exchangeSelectedCards)}
+                >
+                  Confirmar Troca
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Action Overlay (Reaction) */}
       <AnimatePresence>
         {pendingAction && pendingAction.player_id !== myPlayer?.id && (

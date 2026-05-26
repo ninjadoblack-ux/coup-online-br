@@ -25,6 +25,7 @@ export type Database = {
           created_at: string | null
           expires_at: string | null
           id: string
+          next_status: string | null
           player_id: string | null
           room_id: string | null
           status: string | null
@@ -41,6 +42,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          next_status?: string | null
           player_id?: string | null
           room_id?: string | null
           status?: string | null
@@ -57,6 +59,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          next_status?: string | null
           player_id?: string | null
           room_id?: string | null
           status?: string | null

@@ -721,6 +721,15 @@ export const GameView: React.FC<GameViewProps> = ({
                       BLOQUEAR
                     </Button>
                   )}
+                  
+                  {/* Thinking button */}
+                  <Button 
+                    variant="outline" 
+                    className="h-12 sm:h-14 border-purple-900/50 bg-purple-950/20 text-purple-400 font-bold rounded-2xl hover:bg-purple-900/30 col-span-2 mt-2"
+                    onClick={() => handleReaction('think')}
+                  >
+                    PENSANDO... (+5s)
+                  </Button>
                 </div>
               </div>
             </motion.div>

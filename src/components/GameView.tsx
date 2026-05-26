@@ -584,8 +584,8 @@ export const GameView: React.FC<GameViewProps> = ({
               
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                 {[...myCards.filter(c => !c.is_revealed).map(c => c.card_type), ...(pendingAction.temporary_cards || [])].map((cardType, idx) => {
-                  const isSelected = exchangeSelectedCards.includes(cardType);
-                  const canSelect = exchangeSelectedCards.length < myCards.filter(c => !c.is_revealed).length;
+                  const isSelected = exchangeSelectedIndices.includes(idx);
+                  const canSelect = exchangeSelectedIndices.length < myCards.filter(c => !c.is_revealed).length;
                   
                   return (
                     <motion.div 
@@ -594,9 +594,9 @@ export const GameView: React.FC<GameViewProps> = ({
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         if (isSelected) {
-                          setExchangeSelectedCards(prev => prev.filter(c => c !== cardType));
+                          setExchangeSelectedIndices(prev => prev.filter(i => i !== idx));
                         } else if (canSelect) {
-                          setExchangeSelectedCards(prev => [...prev, cardType]);
+                          setExchangeSelectedIndices(prev => [...prev, idx]);
                         }
                       }}
                       className={cn(
@@ -622,9 +622,13 @@ export const GameView: React.FC<GameViewProps> = ({
               <div className="flex justify-center">
                 <Button 
                   size="lg"
-                  disabled={exchangeSelectedCards.length !== myCards.filter(c => !c.is_revealed).length}
+                  disabled={exchangeSelectedIndices.length !== myCards.filter(c => !c.is_revealed).length}
                   className="bg-purple-600 hover:bg-purple-500 text-white font-black uppercase tracking-widest px-12 py-6 rounded-2xl shadow-lg disabled:opacity-50"
-                  onClick={() => handleExchangeFinal(exchangeSelectedCards)}
+                  onClick={() => {
+                    const allAvailable = [...myCards.filter(c => !c.is_revealed).map(c => c.card_type), ...(pendingAction.temporary_cards || [])];
+                    const selectedCards = exchangeSelectedIndices.map(i => allAvailable[i]);
+                    handleExchangeFinal(selectedCards);
+                  }}
                 >
                   Confirmar Troca
                 </Button>

@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Coins, History, Timer } from "lucide-react";
 import coinGold from "@/assets/coin-gold.png";
 import coinSilver from "@/assets/coin-silver.png";
-import { ACTION_DESCRIPTIONS, ACTION_LABELS, ACTION_REQUIRED_CARDS, CARD_LABELS, BLOCKABLE_ACTIONS } from "@/lib/game-logic";
+import { ACTION_DESCRIPTIONS, ACTION_LABELS, ACTION_REQUIRED_CARDS, CARD_LABELS, BLOCKABLE_ACTIONS, getNextPlayerId } from "@/lib/game-logic";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -249,9 +249,9 @@ export const GameView: React.FC<GameViewProps> = ({
       // Move state forward based on next_status
       let nextStatus: any = pendingAction.next_status || 'completed';
       
-      // If we were executing_final or other terminal states, use them directly
-      if (nextStatus === 'executing_final' || nextStatus === 'blocked' || nextStatus === 'failed') {
-        // Keep it as is
+      if (nextStatus === 'completed' || nextStatus === 'failed' || nextStatus === 'blocked') {
+        const nextPlayerId = getNextPlayerId(players, pendingAction.player_id);
+        await supabase.from('rooms').update({ current_turn_player_id: nextPlayerId }).eq('id', room.id);
       }
 
       await supabase.from('game_actions').update({ 

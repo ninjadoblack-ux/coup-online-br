@@ -73,7 +73,7 @@ export const GameView: React.FC<GameViewProps> = ({
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
-  const pendingAction = useMemo(() => actions.find(a => ['pending', 'blocking'].includes(a.status)) || null, [actions]);
+  const pendingAction = useMemo(() => actions.find(a => ['pending', 'blocking', 'challenged', 'block_challenged', 'awaiting_reveal', 'exchanging'].includes(a.status)) || null, [actions]);
 
   // Handle clash detection
   useEffect(() => {
@@ -640,7 +640,7 @@ export const GameView: React.FC<GameViewProps> = ({
 
       {/* Action Overlay (Reaction) */}
       <AnimatePresence>
-        {pendingAction && pendingAction.player_id !== myPlayer?.id && (
+        {pendingAction && ['pending', 'blocking'].includes(pendingAction.status) && pendingAction.player_id !== myPlayer?.id && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

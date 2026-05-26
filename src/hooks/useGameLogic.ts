@@ -144,6 +144,8 @@ export function useGameLogic(
             room_id: room!.id,
             message: `${blocker?.name} provou ter ${CARD_LABELS[matchedCardObj.card_type]}! ${challenger?.name} deve escolher uma carta para perder.`
           }]);
+          await updateCoins(player.id, player.coins); // Ensure coins are updated if needed, though they should be fine
+          // Also handle refunding if needed, but since we're blocked, we might want to refund
           await refundCost(player, action.action_type);
 
           await supabase.from('game_actions').update({ 
@@ -186,7 +188,7 @@ export function useGameLogic(
         return;
       }
 
-      if (shouldExecute || action.next_status === 'executing_final') {
+      if (shouldExecute || action.next_status === 'executing_final' || action.next_status === 'blocked') {
         switch (action.action_type) {
           case 'Income':
             await updateCoins(player.id, player.coins + 1);

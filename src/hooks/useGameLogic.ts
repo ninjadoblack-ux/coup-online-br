@@ -29,16 +29,31 @@ export function useGameLogic(
     }
 
     // Immediate resolution for blocked / challenged / block_challenged
-    if (currentAction.status === 'blocked') {
+    if ((currentAction.status as any) === 'blocked') {
       resolveAction(currentAction, 'block');
       return;
     }
-    if (currentAction.status === 'challenged') {
+    if ((currentAction.status as any) === 'challenged') {
       resolveAction(currentAction, 'challenge');
       return;
     }
-    if (currentAction.status === 'block_challenged') {
+    if ((currentAction.status as any) === 'block_challenged') {
       resolveAction(currentAction, 'block_challenge');
+      return;
+    }
+    
+    if ((currentAction.status as any) === 'executing_final') {
+      resolveAction(currentAction, 'execute');
+      return;
+    }
+
+    if ((currentAction.status as any) === 'blocked' || (currentAction.status as any) === 'failed') {
+      // Just complete the action
+      supabase.from('game_actions').update({ status: 'completed' }).eq('id', currentAction.id).then(() => {
+        checkEliminations();
+        const nextPlayerId = getNextPlayerId(players, currentAction.player_id);
+        supabase.from('rooms').update({ current_turn_player_id: nextPlayerId }).eq('id', room!.id);
+      });
       return;
     }
 
@@ -144,6 +159,8 @@ export function useGameLogic(
             room_id: room!.id,
             message: `${blocker?.name} provou ter ${CARD_LABELS[matchedCardObj.card_type]}! ${challenger?.name} deve escolher uma carta para perder.`
           }]);
+          await updateCoins(player.id, player.coins); // Ensure coins are updated if needed, though they should be fine
+          // Also handle refunding if needed, but since we're blocked, we might want to refund
           await refundCost(player, action.action_type);
 
           await supabase.from('game_actions').update({ 
@@ -186,7 +203,7 @@ export function useGameLogic(
         return;
       }
 
-      if (shouldExecute || action.next_status === 'executing_final') {
+      if (shouldExecute || action.next_status === 'executing_final' || action.next_status === 'blocked') {
         switch (action.action_type) {
           case 'Income':
             await updateCoins(player.id, player.coins + 1);

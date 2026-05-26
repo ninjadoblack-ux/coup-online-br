@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Player, Room, PlayerCard, GameAction, GameLog } from "@/types/game";
+import { Player, Room, PlayerCard, GameAction, GameLog, CardType } from "@/types/game";
 import { GameCard } from "./GameCard";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -51,6 +51,7 @@ export const GameView: React.FC<GameViewProps> = ({
   const [isClashing, setIsClashing] = useState(false);
   const [clashActors, setClashActors] = useState<{ challenger: Player; victim: Player } | null>(null);
   const [showMyEmote, setShowMyEmote] = useState(false);
+  const [exchangeSelectedIndices, setExchangeSelectedIndices] = useState<number[]>([]);
 
   // Show my own emote when updated
   useEffect(() => {
@@ -164,32 +165,37 @@ export const GameView: React.FC<GameViewProps> = ({
     }
   }, [myPlayer, isMyTurn, room.id, players, myCards]);
 
-  const handleReaction = useCallback(async (type: 'allow' | 'challenge' | 'block') => {
+  const handleReaction = useCallback(async (type: 'allow' | 'challenge' | 'block' | 'think') => {
     if (!pendingAction || !myPlayer) return;
 
     try {
+      if (type === 'think') {
+        const currentExpires = pendingAction.expires_at ? new Date(pendingAction.expires_at).getTime() : Date.now();
+        await supabase
+          .from('game_actions')
+          .update({ 
+            expires_at: new Date(currentExpires + 5000).toISOString() 
+          })
+          .eq('id', pendingAction.id);
+        
+        await supabase.from('game_logs').insert([{
+          room_id: room.id,
+          message: `${myPlayer.name} está pensando... (+5s)`
+        }]);
+        return;
+      }
+
       if (type === 'allow') {
-        if (pendingAction.status === 'blocking') {
-          // Allowing a block means the action is now permanently blocked
-          await supabase
-            .from('game_actions')
-            .update({ status: 'blocked' })
-            .eq('id', pendingAction.id);
-          await supabase.from('game_logs').insert([{
-            room_id: room.id,
-            message: `${myPlayer.name} permitiu o bloqueio.`
-          }]);
-        } else {
-          // Encurta o expires_at para que o host resolva imediatamente
-          await supabase
-            .from('game_actions')
-            .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
-            .eq('id', pendingAction.id);
-          await supabase.from('game_logs').insert([{
-            room_id: room.id,
-            message: `${myPlayer.name} permitiu a ação.`
-          }]);
-        }
+        const newAcceptedBy = [...(pendingAction.accepted_by || []), myPlayer.id];
+        await supabase
+          .from('game_actions')
+          .update({ accepted_by: newAcceptedBy })
+          .eq('id', pendingAction.id);
+        
+        await supabase.from('game_logs').insert([{
+          room_id: room.id,
+          message: `${myPlayer.name} permitiu a ação.`
+        }]);
       } else if (type === 'challenge') {
         const newStatus = pendingAction.status === 'blocking' ? 'block_challenged' : 'challenged';
         await supabase
@@ -214,7 +220,7 @@ export const GameView: React.FC<GameViewProps> = ({
           .update({ 
             status: 'blocking',
             blocker_id: myPlayer.id,
-            expires_at: new Date(Date.now() + 12000).toISOString() // Reset timer for challenge to block
+            expires_at: new Date(Date.now() + 10000).toISOString()
           })
           .eq('id', pendingAction.id);
         
@@ -228,6 +234,102 @@ export const GameView: React.FC<GameViewProps> = ({
       toast.error("Erro ao reagir.");
     }
   }, [pendingAction, myPlayer, room.id, players]);
+
+  const handleRevealCardChoice = async (cardId: string) => {
+    if (!pendingAction || !myPlayer) return;
+    try {
+      const card = myCards.find(c => c.id === cardId);
+      await supabase.from('player_cards').update({ is_revealed: true }).eq('id', cardId);
+      
+      await supabase.from('game_logs').insert([{
+        room_id: room.id,
+        message: `${myPlayer.name} revelou um ${card?.card_type}!`
+      }]);
+
+      // Move state forward based on next_status
+      let nextStatus: any = pendingAction.next_status || 'completed';
+      
+      // If we were executing_final, we transition back to something resolveAction picks up
+      if (nextStatus === 'executing_final') {
+        nextStatus = 'pending'; // This will trigger resolveAction in Host
+      }
+
+      await supabase.from('game_actions').update({ 
+        status: nextStatus,
+        acting_player_id: null 
+      }).eq('id', pendingAction.id);
+      
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao revelar carta.");
+    }
+  };
+
+  const handleExchangeConfirm = async (keptCardIds: string[]) => {
+    if (!pendingAction || !myPlayer) return;
+    try {
+      const currentCards = myCards.filter(c => !c.is_revealed);
+      const tempCards = pendingAction.temporary_cards || [];
+      const allCards = [...currentCards.map(c => c.card_type), ...tempCards];
+      
+      // The keptCardIds will tell us which indexes or types to keep
+      // But let's simplify: the UI should pass the final array of types to keep.
+      // Wait, let's just use types for simplicity since it's a swap.
+    } catch (err) {
+       console.error(err);
+    }
+  };
+
+  const handleExchangeFinal = async (newCardTypes: CardType[]) => {
+    if (!pendingAction || !myPlayer) return;
+    try {
+      const currentCards = myCards.filter(c => !c.is_revealed);
+      const tempCards = pendingAction.temporary_cards || [];
+      const allCombined = [...currentCards.map(c => c.card_type), ...tempCards];
+      
+      // Update my cards
+      for (let i = 0; i < currentCards.length; i++) {
+        await supabase.from('player_cards').update({ card_type: newCardTypes[i] }).eq('id', currentCards[i].id);
+      }
+
+      // Remaining cards go back to deck
+      const keptSet = [...newCardTypes];
+      const returnedCards: CardType[] = [];
+      let tempAll = [...allCombined];
+      
+      keptSet.forEach(k => {
+        const idx = tempAll.indexOf(k);
+        if (idx > -1) tempAll.splice(idx, 1);
+      });
+      returnedCards.push(...tempAll);
+
+      const { data: currentRoom } = await supabase.from('rooms').select('deck').eq('id', room.id).single();
+      if (currentRoom) {
+        const deck = [...(currentRoom.deck as CardType[]), ...returnedCards];
+        // Shuffle
+        for (let i = deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        await supabase.from('rooms').update({ deck }).eq('id', room.id);
+      }
+
+      await supabase.from('game_logs').insert([{
+        room_id: room.id,
+        message: `${myPlayer.name} concluiu a troca de cartas.`
+      }]);
+
+      await supabase.from('game_actions').update({ 
+        status: 'completed',
+        acting_player_id: null 
+      }).eq('id', pendingAction.id);
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro na troca.");
+    }
+  };
+
 
   const handleSendEmote = useCallback(async (emote: string) => {
     if (!myPlayer) return;
@@ -421,6 +523,121 @@ export const GameView: React.FC<GameViewProps> = ({
         </motion.div>
       </div>
 
+      {/* Reveal Overlay */}
+      <AnimatePresence>
+        {pendingAction && pendingAction.status === 'awaiting_reveal' && pendingAction.acting_player_id === myPlayer?.id && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-slate-900 border-2 border-red-500/50 rounded-[3rem] p-10 max-w-2xl w-full shadow-[0_0_50px_rgba(239,68,68,0.2)] text-center"
+            >
+              <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">PERDA DE INFLUÊNCIA</h3>
+              <p className="text-slate-400 mb-8 font-bold uppercase tracking-widest text-sm">Selecione uma carta para sacrificar</p>
+              
+              <div className="flex justify-center gap-6">
+                {myCards.filter(c => !c.is_revealed).map(card => (
+                  <div key={card.id} className="flex flex-col gap-4">
+                    <GameCard 
+                      type={card.card_type}
+                      isRevealed={true}
+                      onClick={() => handleRevealCardChoice(card.id)}
+                    />
+                    <Button 
+                      variant="destructive"
+                      className="font-black uppercase tracking-widest text-xs"
+                      onClick={() => handleRevealCardChoice(card.id)}
+                    >
+                      Sacrificar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Exchange Overlay */}
+      <AnimatePresence>
+        {pendingAction && pendingAction.status === 'exchanging' && pendingAction.acting_player_id === myPlayer?.id && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[60] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-slate-900 border-2 border-purple-500/50 rounded-[3rem] p-8 max-w-3xl w-full shadow-[0_0_50px_rgba(168,85,247,0.2)]"
+            >
+              <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight text-center">PROTOCOLO DE TROCA</h3>
+              <p className="text-slate-400 mb-8 font-bold uppercase tracking-widest text-sm text-center">
+                Selecione as {myCards.filter(c => !c.is_revealed).length} cartas que deseja manter
+              </p>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                {[...myCards.filter(c => !c.is_revealed).map(c => c.card_type), ...(pendingAction.temporary_cards || [])].map((cardType, idx) => {
+                  const isSelected = exchangeSelectedIndices.includes(idx);
+                  const canSelect = exchangeSelectedIndices.length < myCards.filter(c => !c.is_revealed).length;
+                  
+                  return (
+                    <motion.div 
+                      key={`${cardType}-${idx}`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        if (isSelected) {
+                          setExchangeSelectedIndices(prev => prev.filter(i => i !== idx));
+                        } else if (canSelect) {
+                          setExchangeSelectedIndices(prev => [...prev, idx]);
+                        }
+                      }}
+                      className={cn(
+                        "aspect-[2/3] rounded-2xl border-2 cursor-pointer transition-all flex flex-col items-center justify-center p-4 text-center gap-2",
+                        isSelected 
+                          ? "bg-purple-600/20 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)]" 
+                          : "bg-slate-800/50 border-slate-700 hover:border-slate-500"
+                      )}
+                    >
+                      <span className={cn(
+                        "text-xs font-black uppercase tracking-tighter",
+                        isSelected ? "text-purple-400" : "text-slate-400"
+                      )}>{CARD_LABELS[cardType]}</span>
+                      <div className={cn(
+                        "w-4 h-4 rounded-full border-2",
+                        isSelected ? "bg-purple-500 border-purple-400" : "border-slate-600"
+                      )} />
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-center">
+                <Button 
+                  size="lg"
+                  disabled={exchangeSelectedIndices.length !== myCards.filter(c => !c.is_revealed).length}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-black uppercase tracking-widest px-12 py-6 rounded-2xl shadow-lg disabled:opacity-50"
+                  onClick={() => {
+                    const allAvailable = [...myCards.filter(c => !c.is_revealed).map(c => c.card_type), ...(pendingAction.temporary_cards || [])];
+                    const selectedCards = exchangeSelectedIndices.map(i => allAvailable[i]);
+                    handleExchangeFinal(selectedCards);
+                  }}
+                >
+                  Confirmar Troca
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Action Overlay (Reaction) */}
       <AnimatePresence>
         {pendingAction && pendingAction.player_id !== myPlayer?.id && (
@@ -508,6 +725,15 @@ export const GameView: React.FC<GameViewProps> = ({
                       BLOQUEAR
                     </Button>
                   )}
+                  
+                  {/* Thinking button */}
+                  <Button 
+                    variant="outline" 
+                    className="h-12 sm:h-14 border-purple-900/50 bg-purple-950/20 text-purple-400 font-bold rounded-2xl hover:bg-purple-900/30 col-span-2 mt-2"
+                    onClick={() => handleReaction('think')}
+                  >
+                    PENSANDO... (+5s)
+                  </Button>
                 </div>
               </div>
             </motion.div>

@@ -59,9 +59,13 @@ export interface GameAction {
   player_id: string;
   target_id: string | null;
   action_type: ActionType;
-  status: 'pending' | 'completed' | 'blocked' | 'challenged' | 'failed' | 'blocking' | 'block_challenged';
+  status: 'pending' | 'completed' | 'blocked' | 'challenged' | 'failed' | 'blocking' | 'block_challenged' | 'awaiting_reveal' | 'exchanging';
   challenger_id?: string | null;
   blocker_id?: string | null;
+  acting_player_id?: string | null;
+  next_status?: string | null;
+  temporary_cards?: CardType[] | null;
+  accepted_by?: string[] | null;
   created_at: string;
   expires_at: string | null;
 }

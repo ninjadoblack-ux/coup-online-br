@@ -16,42 +16,71 @@ export type Database = {
     Tables: {
       game_actions: {
         Row: {
+          accepted_by: string[] | null
+          acting_player_id: string | null
           action_type: string
+          blocked_by: string | null
           blocker_id: string | null
           challenger_id: string | null
           created_at: string | null
           expires_at: string | null
           id: string
+          next_status: string | null
           player_id: string | null
           room_id: string | null
           status: string | null
           target_id: string | null
+          temporary_cards: string[] | null
         }
         Insert: {
+          accepted_by?: string[] | null
+          acting_player_id?: string | null
           action_type: string
+          blocked_by?: string | null
           blocker_id?: string | null
           challenger_id?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          next_status?: string | null
           player_id?: string | null
           room_id?: string | null
           status?: string | null
           target_id?: string | null
+          temporary_cards?: string[] | null
         }
         Update: {
+          accepted_by?: string[] | null
+          acting_player_id?: string | null
           action_type?: string
+          blocked_by?: string | null
           blocker_id?: string | null
           challenger_id?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          next_status?: string | null
           player_id?: string | null
           room_id?: string | null
           status?: string | null
           target_id?: string | null
+          temporary_cards?: string[] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "game_actions_acting_player_id_fkey"
+            columns: ["acting_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_actions_blocked_by_fkey"
+            columns: ["blocked_by"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "game_actions_blocker_id_fkey"
             columns: ["blocker_id"]

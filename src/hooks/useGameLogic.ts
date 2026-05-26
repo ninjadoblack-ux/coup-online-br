@@ -1,7 +1,7 @@
 
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Room, Player, GameAction } from '@/types/game';
+import { Room, Player, GameAction, CardType } from '@/types/game';
 import { ACTION_REQUIRED_CARDS, ACTION_LABELS, CARD_LABELS, BLOCKABLE_ACTIONS } from '@/lib/game-logic';
 
 export function useGameLogic(
@@ -18,7 +18,17 @@ export function useGameLogic(
   useEffect(() => {
     if (!room || !isHost || room.status !== 'playing' || !currentAction) return;
 
-    // Immediate resolution for blocked / challenged
+    // Handle automated resolution if all human players have accepted
+    const humanPlayers = players.filter(p => !p.is_bot && p.status === 'alive');
+    const opponents = humanPlayers.filter(p => p.id !== currentAction.player_id);
+    const allAccepted = opponents.every(p => currentAction.accepted_by?.includes(p.id));
+
+    if (allAccepted && opponents.length > 0 && currentAction.status === 'pending') {
+      resolveAction(currentAction, 'execute');
+      return;
+    }
+
+    // Immediate resolution for blocked / challenged / block_challenged
     if (currentAction.status === 'blocked') {
       resolveAction(currentAction, 'block');
       return;
@@ -29,6 +39,12 @@ export function useGameLogic(
     }
     if (currentAction.status === 'block_challenged') {
       resolveAction(currentAction, 'block_challenge');
+      return;
+    }
+
+    // If it's a Coup, it doesn't need pending phase, it goes straight to awaiting_reveal
+    if (currentAction.action_type === 'Coup' && currentAction.status === 'pending') {
+      resolveAction(currentAction, 'execute');
       return;
     }
 
@@ -44,7 +60,7 @@ export function useGameLogic(
 
       return () => clearTimeout(timeout);
     }
-  }, [room?.status, currentAction?.id, currentAction?.status, currentAction?.expires_at, isHost]);
+  }, [room?.status, currentAction?.id, currentAction?.status, currentAction?.expires_at, currentAction?.accepted_by, isHost]);
 
   const resolveAction = async (action: GameAction, outcome: 'execute' | 'block' | 'challenge' | 'block_challenge') => {
     if (processingRef.current === action.id) return;
@@ -56,7 +72,7 @@ export function useGameLogic(
 
       let shouldExecute = outcome === 'execute';
 
-      // Handle challenge: verify announcer holds the required card
+      // Handle challenge to attacker
       if (outcome === 'challenge') {
         const requiredCard = ACTION_REQUIRED_CARDS[action.action_type];
         const challenger = players.find(p => p.id === action.challenger_id);
@@ -78,84 +94,108 @@ export function useGameLogic(
 
             await supabase.from('game_logs').insert([{
               room_id: room!.id,
-              message: `${player.name} provou ter ${CARD_LABELS[requiredCard]} e trocou a carta! Ação ${ACTION_LABELS[action.action_type]} segue adiante.`
+              message: `${player.name} provou ter ${CARD_LABELS[requiredCard]} e trocou a carta! ${challenger?.name} deve escolher uma carta para perder.`
             }]);
-            if (challenger) await loseCard(challenger.id);
-            shouldExecute = true;
+
+            // Transition to awaiting_reveal for the CHALLENGER
+            const nextStatus = BLOCKABLE_ACTIONS[action.action_type] ? 'blocking' : 'executing_final';
+            await supabase.from('game_actions').update({ 
+              status: 'awaiting_reveal', 
+              acting_player_id: challenger?.id,
+              next_status: nextStatus
+            }).eq('id', action.id);
+            return; // Wait for victim to pick card
           } else {
-            // Bluff caught: announcer loses a card, action cancelled, refund cost
-            await loseCard(player.id);
+            // Bluff caught: attacker loses influence, action cancelled
             await supabase.from('game_logs').insert([{
               room_id: room!.id,
-              message: `${player.name} estava blefando sobre ter ${CARD_LABELS[requiredCard]}! Ação cancelada.`
+              message: `${player.name} estava blefando sobre ter ${CARD_LABELS[requiredCard]}! ${player.name} deve escolher uma carta para perder.`
             }]);
             await refundCost(player, action.action_type);
-            shouldExecute = false;
+            
+            await supabase.from('game_actions').update({ 
+              status: 'awaiting_reveal', 
+              acting_player_id: player.id,
+              next_status: 'failed'
+            }).eq('id', action.id);
+            return;
           }
         }
       }
 
-      // Handle challenge to a block: verify blocker holds the required blocking card
+      // Handle challenge to a block
       if (outcome === 'block_challenge') {
         const blocker = players.find(p => p.id === action.blocker_id);
         const challenger = players.find(p => p.id === action.challenger_id);
         const blockableBy = BLOCKABLE_ACTIONS[action.action_type] || [];
 
-        if (!blocker) {
-          shouldExecute = true;
+        const { data: cards } = await supabase
+          .from('player_cards')
+          .select('*')
+          .eq('player_id', blocker!.id)
+          .eq('is_revealed', false);
+        
+        const matchedCardObj = cards?.find(c => blockableBy.includes(c.card_type as any));
+
+        if (matchedCardObj) {
+          // Blocker was telling the truth: challenger loses influence, action stays blocked
+          await swapCard(blocker!.id, matchedCardObj.id, matchedCardObj.card_type);
+          await supabase.from('game_logs').insert([{
+            room_id: room!.id,
+            message: `${blocker?.name} provou ter ${CARD_LABELS[matchedCardObj.card_type]}! ${challenger?.name} deve escolher uma carta para perder.`
+          }]);
+          await refundCost(player, action.action_type);
+
+          await supabase.from('game_actions').update({ 
+            status: 'awaiting_reveal', 
+            acting_player_id: challenger?.id,
+            next_status: 'blocked'
+          }).eq('id', action.id);
+          return;
         } else {
-          const { data: cards } = await supabase
-            .from('player_cards')
-            .select('*')
-            .eq('player_id', blocker.id)
-            .eq('is_revealed', false);
-          
-          const hasCard = cards?.some(c => blockableBy.includes(c.card_type as any));
+          // Blocker bluff caught: blocker loses a card, action executes
+          await supabase.from('game_logs').insert([{
+            room_id: room!.id,
+            message: `${blocker?.name} estava blefando! ${blocker?.name} deve escolher uma carta para perder.`
+          }]);
 
-          if (hasCard) {
-            // Blocker was telling the truth: action stays blocked, challenger loses influence
-            const matchedCardObj = cards!.find(c => blockableBy.includes(c.card_type as any))!;
-            await swapCard(blocker.id, matchedCardObj.id, matchedCardObj.card_type);
-
-            await supabase.from('game_logs').insert([{
-              room_id: room!.id,
-              message: `${blocker.name} provou ter ${CARD_LABELS[matchedCardObj.card_type]} e trocou a carta! O bloqueio permanece.`
-            }]);
-            if (challenger) await loseCard(challenger.id);
-            await refundCost(player, action.action_type);
-            shouldExecute = false;
-          } else {
-            // Blocker bluff caught: blocker loses a card, action executes normally
-            await loseCard(blocker.id);
-            const blockDesc = blockableBy.map(c => CARD_LABELS[c]).join(' ou ');
-            await supabase.from('game_logs').insert([{
-              room_id: room!.id,
-              message: `${blocker.name} estava blefando sobre ter ${blockDesc}! Ação ${ACTION_LABELS[action.action_type]} de ${player.name} executa.`
-            }]);
-            shouldExecute = true;
-          }
+          await supabase.from('game_actions').update({ 
+            status: 'awaiting_reveal', 
+            acting_player_id: blocker?.id,
+            next_status: 'executing_final'
+          }).eq('id', action.id);
+          return;
         }
       }
 
       if (outcome === 'block') {
         await supabase.from('game_logs').insert([{
           room_id: room!.id,
-          message: `Ação ${ACTION_LABELS[action.action_type] || action.action_type} de ${player.name} foi bloqueada.`
+          message: `Ação ${ACTION_LABELS[action.action_type]} de ${player.name} foi bloqueada.`
         }]);
         await refundCost(player, action.action_type);
         shouldExecute = false;
       }
 
-      if (shouldExecute) {
+      // Special case: if outcome is execute but it's blockable, move to blocking phase first
+      if (outcome === 'execute' && BLOCKABLE_ACTIONS[action.action_type] && action.status === 'pending') {
+        await supabase.from('game_actions').update({ 
+          status: 'blocking',
+          expires_at: new Date(Date.now() + 10000).toISOString()
+        }).eq('id', action.id);
+        return;
+      }
+
+      if (shouldExecute || action.next_status === 'executing_final') {
         switch (action.action_type) {
           case 'Income':
-            await updateCoins(player.id, (player.coins || 0) + 1);
+            await updateCoins(player.id, player.coins + 1);
             break;
           case 'Foreign Aid':
-            await updateCoins(player.id, (player.coins || 0) + 2);
+            await updateCoins(player.id, player.coins + 2);
             break;
           case 'Tax':
-            await updateCoins(player.id, (player.coins || 0) + 3);
+            await updateCoins(player.id, player.coins + 3);
             break;
           case 'Steal':
             if (action.target_id) {
@@ -168,17 +208,23 @@ export function useGameLogic(
             }
             break;
           case 'Assassinate':
-            if (action.target_id) await loseCard(action.target_id);
-            break;
           case 'Coup':
-            if (action.target_id) await loseCard(action.target_id);
+            if (action.target_id) {
+              await supabase.from('game_actions').update({ 
+                status: 'awaiting_reveal', 
+                acting_player_id: action.target_id,
+                next_status: 'completed'
+              }).eq('id', action.id);
+              return; // Wait for target to choose card
+            }
             break;
           case 'Exchange':
-            await handleExchange(player.id);
-            break;
+            await startExchange(player.id, action.id);
+            return; // Wait for player to choose cards
         }
       }
 
+      // Finish turn if not waiting for more choices
       await supabase.from('game_actions').update({ status: 'completed' }).eq('id', action.id);
       await checkEliminations();
 
@@ -189,12 +235,11 @@ export function useGameLogic(
     } finally {
       setTimeout(() => {
         if (processingRef.current === action.id) processingRef.current = null;
-      }, 1500);
+      }, 1000);
     }
   };
 
   const refundCost = async (player: Player, actionType: string) => {
-    // Costs are paid upfront for Assassinate (3) and Coup (7)
     if (actionType === 'Assassinate') {
       await updateCoins(player.id, (player.coins || 0) + 3);
     } else if (actionType === 'Coup') {
@@ -202,60 +247,25 @@ export function useGameLogic(
     }
   };
 
-  const handleExchange = async (playerId: string) => {
+  const startExchange = async (playerId: string, actionId: string) => {
     const { data: currentRoom } = await supabase.from('rooms').select('deck').eq('id', room!.id).single();
     if (!currentRoom) return;
 
-    let deck = [...(currentRoom.deck as any[])];
-    const { data: myCards } = await supabase.from('player_cards').select('*').eq('player_id', playerId).eq('is_revealed', false);
-    if (!myCards) return;
-
-    // Standard Coup: Ambassador takes 2 cards, looks at them + their own cards, and puts 2 back
-    // For simplicity here: we'll just swap all unrevealed cards with new ones from the deck and shuffle the old ones back.
-    const oldCards = myCards.map(c => c.card_type);
-    const numToSwap = oldCards.length;
+    let deck = [...(currentRoom.deck as CardType[])];
+    const newCards = deck.splice(0, 2);
     
-    const newCards = deck.splice(0, numToSwap);
-    deck.push(...oldCards);
-
-    // Shuffle deck
-    for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
-
-    await supabase.from('rooms').update({ deck }).eq('id', room!.id);
-    
-    for (let i = 0; i < numToSwap; i++) {
-      await supabase.from('player_cards').update({ card_type: newCards[i] }).eq('id', myCards[i].id);
-    }
-
-    await supabase.from('game_logs').insert([{
-      room_id: room!.id,
-      message: `${players.find(p => p.id === playerId)?.name} trocou suas cartas.`
-    }]);
+    await Promise.all([
+      supabase.from('rooms').update({ deck }).eq('id', room!.id),
+      supabase.from('game_actions').update({ 
+        status: 'exchanging', 
+        acting_player_id: playerId,
+        temporary_cards: newCards
+      }).eq('id', actionId)
+    ]);
   };
 
   const updateCoins = async (playerId: string, coins: number) => {
-    const { error } = await supabase.from('players').update({ coins: Math.max(0, coins) }).eq('id', playerId);
-    if (error) console.error('Error updating coins:', error);
-  };
-
-  const loseCard = async (playerId: string) => {
-    const { data: cards } = await supabase
-      .from('player_cards')
-      .select('*')
-      .eq('player_id', playerId)
-      .eq('is_revealed', false);
-
-    if (cards && cards.length > 0) {
-      await supabase.from('player_cards').update({ is_revealed: true }).eq('id', cards[0].id);
-      const p = players.find(player => player.id === playerId);
-      await supabase.from('game_logs').insert([{
-        room_id: room!.id,
-        message: `${p?.name} perdeu uma influência!`
-      }]);
-    }
+    await supabase.from('players').update({ coins: Math.max(0, coins) }).eq('id', playerId);
   };
 
   const checkEliminations = async () => {
@@ -312,4 +322,6 @@ export function useGameLogic(
     const nextIndex = (currentIndex + 1) % alivePlayers.length;
     return alivePlayers[nextIndex].id;
   };
+
+  return { resolveAction };
 }

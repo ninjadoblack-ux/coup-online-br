@@ -1,0 +1,1 @@
+ALTER TABLE public.game_actions ADD COLUMN next_status TEXT;

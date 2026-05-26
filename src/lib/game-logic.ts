@@ -73,3 +73,17 @@ export const BLOCKABLE_ACTIONS: Record<string, CardType[]> = {
   'Steal': ['Captain', 'Ambassador'],
   'Assassinate': ['Contessa']
 };
+
+export const getNextPlayerId = (players: any[], currentId: string) => {
+  const alivePlayers = players
+    .filter(p => p.status === 'alive')
+    .sort((a, b) => (a.turn_order || 0) - (b.turn_order || 0));
+
+  if (alivePlayers.length <= 1) return currentId;
+
+  const currentIndex = alivePlayers.findIndex(p => p.id === currentId);
+  if (currentIndex === -1) return alivePlayers[0].id;
+
+  const nextIndex = (currentIndex + 1) % alivePlayers.length;
+  return alivePlayers[nextIndex].id;
+};

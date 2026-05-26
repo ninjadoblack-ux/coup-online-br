@@ -48,12 +48,14 @@ export function useGameLogic(
     }
 
     if ((currentAction.status as any) === 'blocked' || (currentAction.status as any) === 'failed') {
-      // Just complete the action
-      supabase.from('game_actions').update({ status: 'completed' }).eq('id', currentAction.id).then(() => {
-        checkEliminations();
+      const finishAction = async () => {
+        await checkEliminations();
         const nextPlayerId = getNextPlayerId(players, currentAction.player_id);
-        supabase.from('rooms').update({ current_turn_player_id: nextPlayerId }).eq('id', room!.id);
-      });
+        // Advance turn FIRST to prevent race conditions with bot logic
+        await supabase.from('rooms').update({ current_turn_player_id: nextPlayerId }).eq('id', room!.id);
+        await supabase.from('game_actions').update({ status: 'completed' }).eq('id', currentAction.id);
+      };
+      finishAction();
       return;
     }
 
@@ -242,11 +244,11 @@ export function useGameLogic(
       }
 
       // Finish turn if not waiting for more choices
-      await supabase.from('game_actions').update({ status: 'completed' }).eq('id', action.id);
       await checkEliminations();
-
       const nextPlayerId = getNextPlayerId(players, player.id);
+      // Advance turn FIRST to prevent race conditions with bot logic
       await supabase.from('rooms').update({ current_turn_player_id: nextPlayerId }).eq('id', room!.id);
+      await supabase.from('game_actions').update({ status: 'completed' }).eq('id', action.id);
     } catch (err) {
       console.error('Error resolving action:', err);
     } finally {

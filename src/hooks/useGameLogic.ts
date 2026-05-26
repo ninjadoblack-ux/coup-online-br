@@ -83,6 +83,44 @@ export function useGameLogic(
     if (processingRef.current === action.id) return;
     processingRef.current = action.id;
 
+    const handlePenalty = async (targetPlayerId: string, nextStatus: string, logMsg: string) => {
+      const { data: unrevealed } = await supabase
+        .from('player_cards')
+        .select('*')
+        .eq('player_id', targetPlayerId)
+        .eq('is_revealed', false);
+      
+      await supabase.from('game_logs').insert([{
+        room_id: room!.id,
+        message: logMsg
+      }]);
+
+      if (unrevealed && unrevealed.length === 1) {
+        // Auto reveal if only one card left
+        const card = unrevealed[0];
+        await supabase.from('player_cards').update({ is_revealed: true }).eq('id', card.id);
+        await supabase.from('game_logs').insert([{
+          room_id: room!.id,
+          message: `${players.find(p => p.id === targetPlayerId)?.name} perdeu sua influência (${CARD_LABELS[card.card_type]})!`
+        }]);
+        
+        // Check if game should continue or this player is out
+        await checkEliminations();
+        
+        await supabase.from('game_actions').update({ 
+          status: nextStatus,
+          acting_player_id: null 
+        }).eq('id', action.id);
+      } else {
+        // Wait for player to choose which card to lose
+        await supabase.from('game_actions').update({ 
+          status: 'awaiting_reveal', 
+          acting_player_id: targetPlayerId,
+          next_status: nextStatus
+        }).eq('id', action.id);
+      }
+    };
+
     try {
       const player = players.find(p => p.id === action.player_id);
       if (!player) return;
@@ -109,32 +147,20 @@ export function useGameLogic(
             const matchedCardObj = cards!.find(c => c.card_type === requiredCard)!;
             await swapCard(player.id, matchedCardObj.id, matchedCardObj.card_type);
 
-            await supabase.from('game_logs').insert([{
-              room_id: room!.id,
-              message: `${player.name} provou ter ${CARD_LABELS[requiredCard]} e trocou a carta! ${challenger?.name} deve escolher uma carta para perder.`
-            }]);
-
-            // Transition to awaiting_reveal for the CHALLENGER
             const nextStatus = BLOCKABLE_ACTIONS[action.action_type] ? 'blocking' : 'executing_final';
-            await supabase.from('game_actions').update({ 
-              status: 'awaiting_reveal', 
-              acting_player_id: challenger?.id,
-              next_status: nextStatus
-            }).eq('id', action.id);
-            return; // Wait for victim to pick card
+            await handlePenalty(
+              challenger!.id, 
+              nextStatus, 
+              `${player.name} provou ter ${CARD_LABELS[requiredCard]} e trocou a carta! ${challenger?.name} perde influência.`
+            );
+            return;
           } else {
             // Bluff caught: attacker loses influence, action cancelled
-            await supabase.from('game_logs').insert([{
-              room_id: room!.id,
-              message: `${player.name} estava blefando sobre ter ${CARD_LABELS[requiredCard]}! ${player.name} deve escolher uma carta para perder.`
-            }]);
-            await refundCost(player, action.action_type);
-            
-            await supabase.from('game_actions').update({ 
-              status: 'awaiting_reveal', 
-              acting_player_id: player.id,
-              next_status: 'failed'
-            }).eq('id', action.id);
+            await handlePenalty(
+              player.id, 
+              'failed', 
+              `${player.name} estava blefando sobre ter ${CARD_LABELS[requiredCard]}! ${player.name} perde influência.`
+            );
             return;
           }
         }
@@ -157,32 +183,19 @@ export function useGameLogic(
         if (matchedCardObj) {
           // Blocker was telling the truth: challenger loses influence, action stays blocked
           await swapCard(blocker!.id, matchedCardObj.id, matchedCardObj.card_type);
-          await supabase.from('game_logs').insert([{
-            room_id: room!.id,
-            message: `${blocker?.name} provou ter ${CARD_LABELS[matchedCardObj.card_type]}! ${challenger?.name} deve escolher uma carta para perder.`
-          }]);
-          await updateCoins(player.id, player.coins); // Ensure coins are updated if needed, though they should be fine
-          // Also handle refunding if needed, but since we're blocked, we might want to refund
-          await refundCost(player, action.action_type);
-
-          await supabase.from('game_actions').update({ 
-            status: 'awaiting_reveal', 
-            acting_player_id: challenger?.id,
-            next_status: 'blocked'
-          }).eq('id', action.id);
+          await handlePenalty(
+            challenger!.id, 
+            'blocked', 
+            `${blocker?.name} provou ter ${CARD_LABELS[matchedCardObj.card_type]}! ${challenger?.name} perde influência.`
+          );
           return;
         } else {
           // Blocker bluff caught: blocker loses a card, action executes
-          await supabase.from('game_logs').insert([{
-            room_id: room!.id,
-            message: `${blocker?.name} estava blefando! ${blocker?.name} deve escolher uma carta para perder.`
-          }]);
-
-          await supabase.from('game_actions').update({ 
-            status: 'awaiting_reveal', 
-            acting_player_id: blocker?.id,
-            next_status: 'executing_final'
-          }).eq('id', action.id);
+          await handlePenalty(
+            blocker!.id, 
+            'executing_final', 
+            `${blocker?.name} estava blefando! ${blocker?.name} perde influência.`
+          );
           return;
         }
       }
@@ -192,7 +205,7 @@ export function useGameLogic(
           room_id: room!.id,
           message: `Ação ${ACTION_LABELS[action.action_type]} de ${player.name} foi bloqueada.`
         }]);
-        await refundCost(player, action.action_type);
+        // Note: No refund here anymore as per Coup rules for Assassinate
         shouldExecute = false;
       }
 
@@ -229,12 +242,12 @@ export function useGameLogic(
           case 'Assassinate':
           case 'Coup':
             if (action.target_id) {
-              await supabase.from('game_actions').update({ 
-                status: 'awaiting_reveal', 
-                acting_player_id: action.target_id,
-                next_status: 'completed'
-              }).eq('id', action.id);
-              return; // Wait for target to choose card
+              await handlePenalty(
+                action.target_id, 
+                'completed', 
+                `${player.name} executou ${ACTION_LABELS[action.action_type]} contra ${players.find(p => p.id === action.target_id)?.name}!`
+              );
+              return; 
             }
             break;
           case 'Exchange':
@@ -259,11 +272,9 @@ export function useGameLogic(
   };
 
   const refundCost = async (player: Player, actionType: string) => {
-    if (actionType === 'Assassinate') {
-      await updateCoins(player.id, (player.coins || 0) + 3);
-    } else if (actionType === 'Coup') {
-      await updateCoins(player.id, (player.coins || 0) + 7);
-    }
+    // In Coup rules, Assassinate and Coup costs are NOT refunded if blocked or challenged.
+    // However, if the action is cancelled for OTHER reasons (like a bug), we might want it.
+    // For now, keeping it empty as per official rules.
   };
 
   const startExchange = async (playerId: string, actionId: string) => {

@@ -854,29 +854,26 @@ export const GameView: React.FC<GameViewProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-10">
-            <div className="flex gap-2 sm:gap-4 justify-center w-full md:w-auto">
-
-
-            <div className="flex gap-2 sm:gap-4 md:gap-6">
+          <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
+            <div className="flex gap-3 sm:gap-6 justify-center w-full lg:w-auto">
               {myCards.map(card => (
                 <GameCard 
                   key={card.id} 
                   type={card.card_type} 
                   isRevealed={true}
                   className={cn(
-                    "shadow-2xl transition-all duration-500 hover:-translate-y-2 sm:hover:-translate-y-6 hover:rotate-1 hover:scale-105",
+                    "shadow-2xl transition-all duration-500 hover:-translate-y-2 lg:hover:-translate-y-6 hover:rotate-1 hover:scale-105 w-24 sm:w-32",
                     card.is_revealed && "grayscale opacity-50 ring-4 ring-red-500/50"
                   )}
                 />
               ))}
               {myCards.length === 0 && (
-                <div className="w-20 h-30 xs:w-24 xs:h-36 md:w-32 md:h-48 border-2 border-dashed border-slate-800 rounded-3xl flex items-center justify-center">
+                <div className="w-24 h-36 sm:w-32 sm:h-48 border-2 border-dashed border-slate-800 rounded-3xl flex items-center justify-center">
                    <span className="text-slate-800 font-black uppercase text-[10px] rotate-[-45deg]">Eliminado</span>
                 </div>
               )}
             </div>
-          </div>
+
 
           <div className="flex-1 w-full">
              <div className="flex items-center justify-between mb-2 sm:mb-4">

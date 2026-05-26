@@ -63,6 +63,7 @@ export interface GameAction {
   challenger_id?: string | null;
   blocker_id?: string | null;
   acting_player_id?: string | null;
+  next_status?: string | null;
   temporary_cards?: CardType[] | null;
   accepted_by?: string[] | null;
   created_at: string;

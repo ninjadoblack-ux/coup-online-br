@@ -104,9 +104,13 @@ export function useGameLogic(
           message: `${players.find(p => p.id === targetPlayerId)?.name} perdeu sua influência (${CARD_LABELS[card.card_type]})!`
         }]);
         
-        // Check if game should continue or this player is out
         await checkEliminations();
         
+        if (nextStatus === 'completed') {
+          const nextPlayerId = getNextPlayerId(players, action.player_id);
+          await supabase.from('rooms').update({ current_turn_player_id: nextPlayerId }).eq('id', room!.id);
+        }
+
         await supabase.from('game_actions').update({ 
           status: nextStatus,
           acting_player_id: null 

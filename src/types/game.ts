@@ -59,7 +59,7 @@ export interface GameAction {
   player_id: string;
   target_id: string | null;
   action_type: ActionType;
-  status: 'pending' | 'completed' | 'blocked' | 'challenged' | 'failed' | 'blocking' | 'block_challenged' | 'awaiting_reveal' | 'exchanging';
+  status: 'pending' | 'completed' | 'blocked' | 'challenged' | 'failed' | 'blocking' | 'block_challenged' | 'awaiting_reveal' | 'exchanging' | 'executing_final';
   challenger_id?: string | null;
   blocker_id?: string | null;
   acting_player_id?: string | null;

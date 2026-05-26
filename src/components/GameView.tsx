@@ -884,7 +884,7 @@ export const GameView: React.FC<GameViewProps> = ({
                   </span>
                 </div>
              </div>
-             <div className="grid grid-cols-2 xs:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-3">
+             <div className="grid grid-cols-2 xs:grid-cols-4 lg:grid-cols-4 gap-2 sm:gap-3">
               <TooltipProvider delayDuration={300}>
                 {Object.keys(ACTION_DESCRIPTIONS).map((action) => {
                   const requiredCard = ACTION_REQUIRED_CARDS[action];
@@ -898,6 +898,10 @@ export const GameView: React.FC<GameViewProps> = ({
                       hasCard={hasCard}
                       isMyTurn={isMyTurn}
                       onClick={() => handleAction(action)}
+                    />
+                  );
+                })}
+              </TooltipProvider>
             </div>
           </div>
         </div>

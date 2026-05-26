@@ -503,33 +503,81 @@ export const GameView: React.FC<GameViewProps> = ({
              <span className="text-xl sm:text-3xl font-black text-yellow-500/80 tracking-[0.5em] ml-4">BANCO</span>
           </div>
 
-          <div className="w-full max-w-sm h-20 sm:h-32 mt-2 sm:mt-4 z-10">
-            <ScrollArea className="h-full w-full px-6">
-              <div className="flex flex-col gap-2">
-                <AnimatePresence>
-                  {logs.slice(0, 10).reverse().map((log) => {
-                    const isBotMessage = players.some(p => p.is_bot && log.message.startsWith(p.name));
-                    return (
-                      <motion.div 
-                        key={log.id} 
-                        initial={{ x: -10, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        className={cn(
-                          "text-[10px] font-black uppercase tracking-tighter flex items-start gap-2 py-1 border-b border-slate-800/30",
-                          isBotMessage ? "text-purple-400" : "text-slate-500"
-                        )}
-                      >
-                        <span className="opacity-30 font-mono">[{new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
-                        <span>{log.message}</span>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
-            </ScrollArea>
+          <div className="w-full max-w-sm h-16 sm:h-32 mt-2 sm:mt-4 z-10 px-4">
+            <div className="flex flex-col gap-1 items-center">
+              <AnimatePresence mode="popLayout">
+                {logs.slice(0, 2).map((log, idx) => {
+                  const isBotMessage = players.some(p => p.is_bot && log.message.startsWith(p.name));
+                  return (
+                    <motion.div 
+                      key={log.id} 
+                      initial={{ y: 5, opacity: 0 }}
+                      animate={{ y: 0, opacity: idx === 0 ? 1 : 0.4 }}
+                      exit={{ opacity: 0 }}
+                      className={cn(
+                        "text-[9px] sm:text-[10px] font-black uppercase tracking-tighter text-center line-clamp-1",
+                        isBotMessage ? "text-purple-400" : "text-slate-400"
+                      )}
+                    >
+                      {log.message}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              {logs.length > 2 && (
+                <button 
+                  onClick={() => setIsLogOpen(true)}
+                  className="text-[8px] font-bold text-slate-600 uppercase tracking-widest mt-1 hover:text-purple-400 transition-colors"
+                >
+                  Ver histórico completo
+                </button>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>
+
+      <Sheet open={isLogOpen} onOpenChange={setIsLogOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md bg-slate-950 border-slate-800 p-0 flex flex-col gap-0 z-[110]">
+          <SheetHeader className="p-6 border-b border-slate-800 bg-slate-900/50">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-white font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                <HistoryIcon className="w-5 h-5 text-purple-500" />
+                Histórico Neural
+              </SheetTitle>
+            </div>
+          </SheetHeader>
+          <ScrollArea className="flex-1 p-6">
+            <div className="space-y-4">
+              {logs.map((log) => {
+                const isBotMessage = players.some(p => p.is_bot && log.message.startsWith(p.name));
+                return (
+                  <div key={log.id} className="flex gap-4 items-start group">
+                    <span className="text-[10px] font-mono text-slate-600 mt-1 shrink-0">
+                      {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                    <p className={cn(
+                      "text-xs font-bold leading-relaxed uppercase tracking-tight",
+                      isBotMessage ? "text-purple-400" : "text-slate-300"
+                    )}>
+                      {log.message}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+          <div className="p-6 border-t border-slate-800 bg-slate-900/30">
+            <Button 
+              variant="outline" 
+              className="w-full border-slate-700 font-black uppercase tracking-widest"
+              onClick={() => setIsLogOpen(false)}
+            >
+              Fechar Registro
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Reveal Overlay */}
       <AnimatePresence>

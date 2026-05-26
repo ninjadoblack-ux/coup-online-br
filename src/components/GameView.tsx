@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Player, Room, PlayerCard, GameAction, GameLog } from "@/types/game";
+import { Player, Room, PlayerCard, GameAction, GameLog, CardType } from "@/types/game";
 import { GameCard } from "./GameCard";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";

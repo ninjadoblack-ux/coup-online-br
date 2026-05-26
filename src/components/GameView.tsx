@@ -73,6 +73,10 @@ export const GameView: React.FC<GameViewProps> = ({
 
   useBotLogic(room, players, myPlayer, actions, allCards);
   useGameLogic(room, players, myPlayer, actions);
+
+  const shakeVariants = {
+    shake: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4 } }
+  };
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);

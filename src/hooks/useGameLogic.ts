@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Room, Player, GameAction, CardType } from '@/types/game';
-import { ACTION_REQUIRED_CARDS, ACTION_LABELS, CARD_LABELS, BLOCKABLE_ACTIONS } from '@/lib/game-logic';
+import { ACTION_REQUIRED_CARDS, ACTION_LABELS, CARD_LABELS, BLOCKABLE_ACTIONS, getNextPlayerId } from '@/lib/game-logic';
 
 export function useGameLogic(
   room: Room | null,
@@ -341,20 +341,6 @@ export function useGameLogic(
       supabase.from('rooms').update({ deck }).eq('id', room!.id),
       supabase.from('player_cards').update({ card_type: newCard }).eq('id', cardId)
     ]);
-  };
-
-  const getNextPlayerId = (players: Player[], currentId: string) => {
-    const alivePlayers = players
-      .filter(p => p.status === 'alive')
-      .sort((a, b) => (a.turn_order || 0) - (b.turn_order || 0));
-
-    if (alivePlayers.length <= 1) return currentId;
-
-    const currentIndex = alivePlayers.findIndex(p => p.id === currentId);
-    if (currentIndex === -1) return alivePlayers[0].id;
-
-    const nextIndex = (currentIndex + 1) % alivePlayers.length;
-    return alivePlayers[nextIndex].id;
   };
 
   return { resolveAction };

@@ -5,7 +5,7 @@ import { Player, Room, PlayerCard, GameAction, GameLog, CardType } from "@/types
 import { GameCard } from "./GameCard";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Coins, History, Timer } from "lucide-react";
+import { History as HistoryIcon, Timer, Bot, Info } from "lucide-react";
 import coinGold from "@/assets/coin-gold.png";
 import coinSilver from "@/assets/coin-silver.png";
 import { ACTION_DESCRIPTIONS, ACTION_LABELS, ACTION_REQUIRED_CARDS, CARD_LABELS, BLOCKABLE_ACTIONS, getNextPlayerId } from "@/lib/game-logic";
@@ -14,7 +14,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useBotLogic } from "@/hooks/useBotLogic";
 import { useGameLogic } from "@/hooks/useGameLogic";
-import { Bot, Info, History as HistoryIcon, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +25,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 
 const EMOTES = ["👁️", "💧", "😈", "🤡", "🤔", "🤫", "🔥", "🤝"];
@@ -49,7 +47,6 @@ export const GameView: React.FC<GameViewProps> = ({
   myCards, 
   allCards,
   actions, 
-
   logs,
   onLeaveRoom
 }) => {
@@ -61,7 +58,6 @@ export const GameView: React.FC<GameViewProps> = ({
   const [exchangeSelectedIndices, setExchangeSelectedIndices] = useState<number[]>([]);
   const [isLogOpen, setIsLogOpen] = useState(false);
 
-  // Show my own emote when updated
   useEffect(() => {
     if (myPlayer?.current_emote && myPlayer?.emote_at) {
       const emoteTime = new Date(myPlayer.emote_at).getTime();
@@ -75,7 +71,6 @@ export const GameView: React.FC<GameViewProps> = ({
     setShowMyEmote(false);
   }, [myPlayer?.current_emote, myPlayer?.emote_at]);
 
-  // Game Engine & Bot Logic Hooks (Host only)
   useBotLogic(room, players, myPlayer, actions, allCards);
   useGameLogic(room, players, myPlayer, actions);
   
@@ -83,7 +78,6 @@ export const GameView: React.FC<GameViewProps> = ({
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
   const pendingAction = useMemo(() => actions.find(a => ['pending', 'blocking', 'challenged', 'block_challenged', 'awaiting_reveal', 'exchanging', 'executing_final'].includes(a.status)) || null, [actions]);
 
-  // Handle clash detection
   useEffect(() => {
     const activeChallenge = actions.find(a => ['challenged', 'block_challenged'].includes(a.status));
     if (activeChallenge && !isClashing) {
@@ -100,16 +94,6 @@ export const GameView: React.FC<GameViewProps> = ({
     }
   }, [actions, players, isClashing]);
 
-  // Screen shake animation variants
-  const shakeVariants = {
-    shake: {
-      x: [0, -10, 10, -10, 10, 0],
-      transition: { duration: 0.4 }
-    }
-  };
-
-  // Local 10s countdown that starts when the overlay first appears for this action,
-  // independent of server-side expires_at drift.
   useEffect(() => {
     if (!pendingAction) {
       setTimeLeft(null);
@@ -144,7 +128,6 @@ export const GameView: React.FC<GameViewProps> = ({
     }
 
     try {
-      // Cost is paid upfront for Assassinate and Coup to avoid double-spend/delay issues
       if (actionType === 'Assassinate') {
         await supabase.from('players').update({ coins: myPlayer.coins - 3 }).eq('id', myPlayer.id);
       } else if (actionType === 'Coup') {
@@ -254,7 +237,6 @@ export const GameView: React.FC<GameViewProps> = ({
         message: `${myPlayer.name} revelou um ${card?.card_type}!`
       }]);
 
-      // Move state forward based on next_status
       let nextStatus: any = pendingAction.next_status || 'completed';
       
       if (nextStatus === 'completed' || nextStatus === 'failed' || nextStatus === 'blocked') {
@@ -273,21 +255,6 @@ export const GameView: React.FC<GameViewProps> = ({
     }
   };
 
-  const handleExchangeConfirm = async (keptCardIds: string[]) => {
-    if (!pendingAction || !myPlayer) return;
-    try {
-      const currentCards = myCards.filter(c => !c.is_revealed);
-      const tempCards = pendingAction.temporary_cards || [];
-      const allCards = [...currentCards.map(c => c.card_type), ...tempCards];
-      
-      // The keptCardIds will tell us which indexes or types to keep
-      // But let's simplify: the UI should pass the final array of types to keep.
-      // Wait, let's just use types for simplicity since it's a swap.
-    } catch (err) {
-       console.error(err);
-    }
-  };
-
   const handleExchangeFinal = async (newCardTypes: CardType[]) => {
     if (!pendingAction || !myPlayer) return;
     try {
@@ -295,12 +262,10 @@ export const GameView: React.FC<GameViewProps> = ({
       const tempCards = pendingAction.temporary_cards || [];
       const allCombined = [...currentCards.map(c => c.card_type), ...tempCards];
       
-      // Update my cards
       for (let i = 0; i < currentCards.length; i++) {
         await supabase.from('player_cards').update({ card_type: newCardTypes[i] }).eq('id', currentCards[i].id);
       }
 
-      // Remaining cards go back to deck
       const keptSet = [...newCardTypes];
       const returnedCards: CardType[] = [];
       let tempAll = [...allCombined];
@@ -314,7 +279,6 @@ export const GameView: React.FC<GameViewProps> = ({
       const { data: currentRoom } = await supabase.from('rooms').select('deck').eq('id', room.id).single();
       if (currentRoom) {
         const deck = [...(currentRoom.deck as CardType[]), ...returnedCards];
-        // Shuffle
         for (let i = deck.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -337,7 +301,6 @@ export const GameView: React.FC<GameViewProps> = ({
       toast.error("Erro na troca.");
     }
   };
-
 
   const handleSendEmote = useCallback(async (emote: string) => {
     if (!myPlayer) return;
@@ -377,7 +340,6 @@ export const GameView: React.FC<GameViewProps> = ({
             </div>
 
             <div className="relative flex items-center justify-center w-full max-w-4xl px-4 gap-4 sm:gap-20">
-               {/* Challenger */}
                <motion.div
                 initial={{ x: -300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -402,7 +364,6 @@ export const GameView: React.FC<GameViewProps> = ({
                  VS
                </motion.div>
 
-               {/* Victim */}
                <motion.div
                 initial={{ x: 300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -432,7 +393,6 @@ export const GameView: React.FC<GameViewProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Header Info */}
       <div className="flex items-center justify-between p-3 sm:p-4 z-20">
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center">
@@ -454,7 +414,6 @@ export const GameView: React.FC<GameViewProps> = ({
         </Button>
       </div>
 
-      {/* Opponents Layout */}
       <div className="flex justify-center gap-2 sm:gap-6 px-4 py-4 overflow-x-auto no-scrollbar scroll-smooth">
         {opponents.map(opponent => (
           <OpponentCard 
@@ -467,7 +426,6 @@ export const GameView: React.FC<GameViewProps> = ({
         ))}
       </div>
 
-      {/* Main Table Area */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8 relative">
         <motion.div 
           variants={shakeVariants}
@@ -579,7 +537,6 @@ export const GameView: React.FC<GameViewProps> = ({
         </SheetContent>
       </Sheet>
 
-      {/* Reveal Overlay */}
       <AnimatePresence>
         {pendingAction && pendingAction.status === 'awaiting_reveal' && pendingAction.acting_player_id === myPlayer?.id && (
           <motion.div 
@@ -619,7 +576,6 @@ export const GameView: React.FC<GameViewProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Exchange Overlay */}
       <AnimatePresence>
         {pendingAction && pendingAction.status === 'exchanging' && pendingAction.acting_player_id === myPlayer?.id && (
           <motion.div 
@@ -694,7 +650,6 @@ export const GameView: React.FC<GameViewProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Action Overlay (Reaction) */}
       <AnimatePresence>
         {pendingAction && ['pending', 'blocking'].includes(pendingAction.status) && pendingAction.player_id !== myPlayer?.id && (
           <motion.div 
@@ -744,7 +699,6 @@ export const GameView: React.FC<GameViewProps> = ({
               </h3>
               
               <div className="flex flex-col gap-3 sm:gap-4 mt-8 sm:mt-12">
-                {/* Only others can challenge an action, but anyone can challenge a block */}
                 {(pendingAction.status === 'blocking' || (pendingAction.player_id !== myPlayer?.id && ACTION_REQUIRED_CARDS[pendingAction.action_type])) && (
                   <Button 
                     size="lg"
@@ -769,7 +723,6 @@ export const GameView: React.FC<GameViewProps> = ({
                     {pendingAction.status === 'blocking' ? 'PERMITIR BLOQUEIO' : 'PERMITIR'}
                   </Button>
                   
-                  {/* Blocking logic: can block if it's blockable AND I'm not the actor AND it's not already being blocked */}
                   {pendingAction.status !== 'blocking' && 
                    BLOCKABLE_ACTIONS[pendingAction.action_type] && 
                    pendingAction.player_id !== myPlayer?.id && (
@@ -782,7 +735,6 @@ export const GameView: React.FC<GameViewProps> = ({
                     </Button>
                   )}
                   
-                  {/* Thinking button */}
                   <Button 
                     variant="outline" 
                     className="h-12 sm:h-14 border-purple-900/50 bg-purple-950/20 text-purple-400 font-bold rounded-2xl hover:bg-purple-900/30 col-span-2 mt-2"
@@ -797,9 +749,7 @@ export const GameView: React.FC<GameViewProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Bottom Interface - Player Panel */}
       <div className="bg-slate-900/90 backdrop-blur-2xl border-t border-slate-800/50 p-4 sm:p-6 z-20 relative">
-        {/* Emote Picker */}
         <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-1 bg-slate-950/95 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 shadow-2xl z-30 ring-1 ring-white/5">
           {EMOTES.map(emote => (
             <button 
@@ -874,34 +824,34 @@ export const GameView: React.FC<GameViewProps> = ({
               )}
             </div>
 
-
-          <div className="flex-1 w-full">
-            <div className="flex items-center justify-between mb-2 sm:mb-4">
-              <div className="flex items-center gap-2">
-                <div className={cn("w-2 h-2 rounded-full", isMyTurn ? "bg-purple-500 shadow-[0_0_10px_oklch(0.6_0.2_280)]" : "bg-slate-700")} />
-                <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isMyTurn ? "text-purple-400" : "text-slate-500")}>
-                  {isMyTurn ? "Sua Vez // Escolha uma Ação" : "Aguardando Turno..."}
-                </span>
+            <div className="flex-1 w-full">
+              <div className="flex items-center justify-between mb-2 sm:mb-4">
+                <div className="flex items-center gap-2">
+                  <div className={cn("w-2 h-2 rounded-full", isMyTurn ? "bg-purple-500 shadow-[0_0_10px_oklch(0.6_0.2_280)]" : "bg-slate-700")} />
+                  <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isMyTurn ? "text-purple-400" : "text-slate-500")}>
+                    {isMyTurn ? "Sua Vez // Escolha uma Ação" : "Aguardando Turno..."}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="grid grid-cols-2 xs:grid-cols-4 lg:grid-cols-4 gap-2 sm:gap-3">
-              <TooltipProvider delayDuration={300}>
-                {Object.keys(ACTION_DESCRIPTIONS).map((action) => {
-                  const requiredCard = ACTION_REQUIRED_CARDS[action];
-                  const hasCard = !requiredCard || myCards.some(c => c.card_type === requiredCard && !c.is_revealed);
-                  
-                  return (
-                    <ActionBtn 
-                      key={action}
-                      action={action}
-                      disabled={!isMyTurn || pendingAction !== null || ((myPlayer?.coins ?? 0) >= 10 && action !== 'Coup')}
-                      hasCard={hasCard}
-                      isMyTurn={isMyTurn}
-                      onClick={() => handleAction(action)}
-                    />
-                  );
-                })}
-              </TooltipProvider>
+              <div className="grid grid-cols-2 xs:grid-cols-4 lg:grid-cols-4 gap-2 sm:gap-3">
+                <TooltipProvider delayDuration={300}>
+                  {Object.keys(ACTION_DESCRIPTIONS).map((action) => {
+                    const requiredCard = ACTION_REQUIRED_CARDS[action];
+                    const hasCard = !requiredCard || myCards.some(c => c.card_type === requiredCard && !c.is_revealed);
+                    
+                    return (
+                      <ActionBtn 
+                        key={action}
+                        action={action}
+                        disabled={!isMyTurn || pendingAction !== null || ((myPlayer?.coins ?? 0) >= 10 && action !== 'Coup')}
+                        hasCard={hasCard}
+                        isMyTurn={isMyTurn}
+                        onClick={() => handleAction(action)}
+                      />
+                    );
+                  })}
+                </TooltipProvider>
+              </div>
             </div>
           </div>
         </div>

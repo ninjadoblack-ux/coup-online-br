@@ -73,7 +73,7 @@ export const GameView: React.FC<GameViewProps> = ({
   
   const opponents = useMemo(() => players.filter(p => p.id !== myPlayer?.id), [players, myPlayer?.id]);
   const isMyTurn = useMemo(() => room.current_turn_player_id === myPlayer?.id, [room.current_turn_player_id, myPlayer?.id]);
-  const pendingAction = useMemo(() => actions.find(a => ['pending', 'blocking', 'challenged', 'block_challenged', 'awaiting_reveal', 'exchanging'].includes(a.status)) || null, [actions]);
+  const pendingAction = useMemo(() => actions.find(a => ['pending', 'blocking', 'challenged', 'block_challenged', 'awaiting_reveal', 'exchanging', 'executing_final'].includes(a.status)) || null, [actions]);
 
   // Handle clash detection
   useEffect(() => {

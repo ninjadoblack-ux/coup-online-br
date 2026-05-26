@@ -876,15 +876,15 @@ export const GameView: React.FC<GameViewProps> = ({
 
 
           <div className="flex-1 w-full">
-             <div className="flex items-center justify-between mb-2 sm:mb-4">
-                <div className="flex items-center gap-2">
-                  <div className={cn("w-2 h-2 rounded-full", isMyTurn ? "bg-purple-500 shadow-[0_0_10px_oklch(0.6_0.2_280)]" : "bg-slate-700")} />
-                  <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isMyTurn ? "text-purple-400" : "text-slate-500")}>
-                    {isMyTurn ? "Sua Vez // Escolha uma Ação" : "Aguardando Turno..."}
-                  </span>
-                </div>
-             </div>
-             <div className="grid grid-cols-2 xs:grid-cols-4 lg:grid-cols-4 gap-2 sm:gap-3">
+            <div className="flex items-center justify-between mb-2 sm:mb-4">
+              <div className="flex items-center gap-2">
+                <div className={cn("w-2 h-2 rounded-full", isMyTurn ? "bg-purple-500 shadow-[0_0_10px_oklch(0.6_0.2_280)]" : "bg-slate-700")} />
+                <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isMyTurn ? "text-purple-400" : "text-slate-500")}>
+                  {isMyTurn ? "Sua Vez // Escolha uma Ação" : "Aguardando Turno..."}
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 xs:grid-cols-4 lg:grid-cols-4 gap-2 sm:gap-3">
               <TooltipProvider delayDuration={300}>
                 {Object.keys(ACTION_DESCRIPTIONS).map((action) => {
                   const requiredCard = ACTION_REQUIRED_CARDS[action];

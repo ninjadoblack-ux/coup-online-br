@@ -544,8 +544,8 @@ export const GameView: React.FC<GameViewProps> = ({
                 {myCards.filter(c => !c.is_revealed).map(card => (
                   <div key={card.id} className="flex flex-col gap-4">
                     <GameCard 
-                      card={card} 
-                      isMe={true} 
+                      type={card.card_type}
+                      isRevealed={true}
                       onClick={() => handleRevealCardChoice(card.id)}
                     />
                     <Button 

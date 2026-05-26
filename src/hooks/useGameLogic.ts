@@ -29,25 +29,25 @@ export function useGameLogic(
     }
 
     // Immediate resolution for blocked / challenged / block_challenged
-    if (currentAction.status === 'blocked') {
+    if ((currentAction.status as any) === 'blocked') {
       resolveAction(currentAction, 'block');
       return;
     }
-    if (currentAction.status === 'challenged') {
+    if ((currentAction.status as any) === 'challenged') {
       resolveAction(currentAction, 'challenge');
       return;
     }
-    if (currentAction.status === 'block_challenged') {
+    if ((currentAction.status as any) === 'block_challenged') {
       resolveAction(currentAction, 'block_challenge');
       return;
     }
     
-    if (currentAction.status === 'executing_final') {
+    if ((currentAction.status as any) === 'executing_final') {
       resolveAction(currentAction, 'execute');
       return;
     }
 
-    if (currentAction.status === 'blocked' || currentAction.status === 'failed') {
+    if ((currentAction.status as any) === 'blocked' || (currentAction.status as any) === 'failed') {
       // Just complete the action
       supabase.from('game_actions').update({ status: 'completed' }).eq('id', currentAction.id).then(() => {
         checkEliminations();

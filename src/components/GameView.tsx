@@ -51,7 +51,7 @@ export const GameView: React.FC<GameViewProps> = ({
   const [isClashing, setIsClashing] = useState(false);
   const [clashActors, setClashActors] = useState<{ challenger: Player; victim: Player } | null>(null);
   const [showMyEmote, setShowMyEmote] = useState(false);
-  const [exchangeSelectedCards, setExchangeSelectedCards] = useState<CardType[]>([]);
+  const [exchangeSelectedIndices, setExchangeSelectedIndices] = useState<number[]>([]);
 
   // Show my own emote when updated
   useEffect(() => {

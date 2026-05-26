@@ -1,7 +1,6 @@
-
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Room, Player, GameAction, PlayerCard } from '@/types/game';
+import { Room, Player, GameAction, PlayerCard, CardType } from '@/types/game';
 import { ACTION_LABELS, ACTION_REQUIRED_CARDS, BLOCKABLE_ACTIONS } from '@/lib/game-logic';
 
 export function useBotLogic(
@@ -42,7 +41,18 @@ export function useBotLogic(
         }
       });
     }
-  }, [room?.current_turn_player_id, actions[0]?.id, isHost]); // Only run when turn changes or pending action changes
+
+    // 3. Bot needs to make a mandatory choice (Reveal or Exchange)
+    if (pendingAction && pendingAction.acting_player_id) {
+      const actingPlayer = players.find(p => p.id === pendingAction.acting_player_id);
+      if (actingPlayer?.is_bot) {
+        const key = `choice_${actingPlayer.id}_${pendingAction.id}`;
+        if (!thinkingRef.current[key]) {
+          handleBotChoice(actingPlayer, pendingAction);
+        }
+      }
+    }
+  }, [room?.current_turn_player_id, actions[0]?.id, actions[0]?.status, actions[0]?.acting_player_id, isHost]);
 
   const sendBotEmote = async (botId: string, emote: string) => {
     try {
@@ -55,6 +65,87 @@ export function useBotLogic(
     }
   };
 
+  const handleBotChoice = async (bot: Player, action: GameAction) => {
+    const key = `choice_${bot.id}_${action.id}`;
+    thinkingRef.current[key] = true;
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    try {
+      if (action.status === 'awaiting_reveal') {
+        const botCards = allCards.filter(c => c.player_id === bot.id && !c.is_revealed);
+        if (botCards.length > 0) {
+          // Difficulty-based reveal: smarter bots might keep better cards
+          const cardToReveal = botCards[0]; 
+          await supabase.from('player_cards').update({ is_revealed: true }).eq('id', cardToReveal.id);
+          
+          await supabase.from('game_logs').insert([{
+            room_id: room!.id,
+            message: `${bot.name} revelou um ${cardToReveal.card_type}!`
+          }]);
+
+          // Move state forward
+          if (action.next_status === 'completed' || action.next_status === 'failed' || action.next_status === 'blocked') {
+            await supabase.from('game_actions').update({ 
+              status: action.next_status as any,
+              acting_player_id: null 
+            }).eq('id', action.id);
+          } else if (action.next_status === 'executing_final') {
+            await supabase.from('game_actions').update({ 
+              status: 'pending', // Trick resolveAction into executing it
+              acting_player_id: null,
+              next_status: 'executing_final' 
+            }).eq('id', action.id);
+          } else if (action.next_status === 'blocking') {
+            await supabase.from('game_actions').update({ 
+              status: 'blocking',
+              acting_player_id: null,
+              expires_at: new Date(Date.now() + 10000).toISOString()
+            }).eq('id', action.id);
+          }
+        }
+      } else if (action.status === 'exchanging') {
+        // Ambassador exchange logic for bots
+        const botCards = allCards.filter(c => c.player_id === bot.id && !c.is_revealed);
+        const tempCards = action.temporary_cards || [];
+        const allAvailable = [...botCards.map(c => c.card_type), ...tempCards];
+        
+        // Bot just keeps the first 1 or 2 cards it had/drew (simple logic)
+        const cardsToKeep = allAvailable.slice(0, botCards.length);
+        const cardsToReturn = allAvailable.slice(botCards.length);
+
+        // Update player cards
+        for (let i = 0; i < botCards.length; i++) {
+          await supabase.from('player_cards').update({ card_type: cardsToKeep[i] }).eq('id', botCards[i].id);
+        }
+
+        // Return others to deck
+        const { data: currentRoom } = await supabase.from('rooms').select('deck').eq('id', room!.id).single();
+        if (currentRoom) {
+          const deck = [...(currentRoom.deck as string[]), ...cardsToReturn];
+          // Shuffle deck
+          for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+          }
+          await supabase.from('rooms').update({ deck }).eq('id', room!.id);
+        }
+
+        await supabase.from('game_logs').insert([{
+          room_id: room!.id,
+          message: `${bot.name} concluiu a troca de cartas.`
+        }]);
+
+        await supabase.from('game_actions').update({ 
+          status: 'completed',
+          acting_player_id: null 
+        }).eq('id', action.id);
+      }
+    } catch (err) {
+      console.error('Error in bot choice:', err);
+    }
+  };
+
   const handleBotTurn = async (bot: Player) => {
     thinkingRef.current[bot.id] = true;
     
@@ -64,81 +155,43 @@ export function useBotLogic(
       sendBotEmote(bot.id, emotes[Math.floor(Math.random() * emotes.length)]);
     }
 
-    // 2 second "thinking" delay as requested
+    // 3 second delay
     await new Promise(resolve => setTimeout(resolve, 3000));
 
     try {
       const botCards = allCards.filter(c => c.player_id === bot.id && !c.is_revealed);
-      const canTakeAction = (action: string) => {
-        const req = ACTION_REQUIRED_CARDS[action];
-        if (!req) return true;
-        return botCards.some(c => c.card_type === req);
-      };
-
-      const legalActions = ['Income', 'Foreign Aid', 'Tax', 'Steal', 'Assassinate', 'Exchange', 'Coup'];
+      const difficulty = bot.bot_difficulty || 'moderate';
       let actionType = 'Income';
 
-      const difficulty = bot.bot_difficulty || 'moderate';
-
-      // Difficulty-based decision making
-      if (difficulty === 'easy') {
-        if (bot.coins >= 10) {
-          actionType = 'Coup';
-        } else {
-          const random = Math.random();
-          if (random > 0.9) actionType = 'Tax';
-          else if (random > 0.8) actionType = 'Foreign Aid';
-          else if (random > 0.7) actionType = 'Steal';
-          else actionType = 'Income';
-        }
-      } else if (difficulty === 'moderate') {
-        if (bot.coins >= 10) {
-          actionType = 'Coup';
-        } else if (bot.coins >= 7 && Math.random() > 0.5) {
-          actionType = 'Coup';
-        } else if (bot.coins >= 3 && Math.random() > 0.7) {
-          actionType = 'Assassinate';
-        } else {
-          const random = Math.random();
-          if (random > 0.8) actionType = 'Tax';
-          else if (random > 0.6) actionType = 'Steal';
-          else if (random > 0.4) actionType = 'Foreign Aid';
-          else if (random > 0.2) actionType = 'Exchange';
-          else actionType = 'Income';
-        }
-      } else { // Hard
-        if (bot.coins >= 7) {
-          actionType = 'Coup';
-        } else if (bot.coins >= 3) {
-          // More aggressive assassination
-          actionType = Math.random() > 0.4 ? 'Assassinate' : 'Tax';
-        } else {
-          const random = Math.random();
-          if (random > 0.6) actionType = 'Tax';
-          else if (random > 0.3) actionType = 'Steal';
-          else actionType = 'Foreign Aid';
-        }
+      if (bot.coins >= 10) {
+        actionType = 'Coup';
+      } else if (difficulty === 'easy') {
+        const random = Math.random();
+        if (random > 0.9) actionType = 'Tax';
+        else if (random > 0.8) actionType = 'Foreign Aid';
+        else actionType = 'Income';
+      } else {
+        const random = Math.random();
+        if (bot.coins >= 7 && random > 0.5) actionType = 'Coup';
+        else if (bot.coins >= 3 && random > 0.7) actionType = 'Assassinate';
+        else if (random > 0.8) actionType = 'Tax';
+        else if (random > 0.6) actionType = 'Steal';
+        else if (random > 0.4) actionType = 'Exchange';
+        else actionType = 'Income';
       }
 
-
-      // Select target if needed
+      // Select target
       let targetId: string | null = null;
       if (['Assassinate', 'Steal', 'Coup'].includes(actionType)) {
         const potentialTargets = players.filter(p => p.id !== bot.id && p.status === 'alive');
         if (potentialTargets.length > 0) {
-          if (difficulty === 'hard') {
-            // Target the player with most coins
-            targetId = [...potentialTargets].sort((a, b) => b.coins - a.coins)[0].id;
-          } else {
-            targetId = potentialTargets[Math.floor(Math.random() * potentialTargets.length)].id;
-          }
+          targetId = potentialTargets[Math.floor(Math.random() * potentialTargets.length)].id;
         } else {
-          actionType = 'Income'; // Fallback
+          actionType = 'Income';
         }
       }
 
-
-      // Deduct coins immediately for bots as well
+      // Cost upfront
       if (actionType === 'Assassinate') {
         await supabase.from('players').update({ coins: bot.coins - 3 }).eq('id', bot.id);
       } else if (actionType === 'Coup') {
@@ -162,7 +215,6 @@ export function useBotLogic(
     } catch (err) {
       console.error('Error in bot turn:', err);
     } finally {
-      // We don't clear the ref immediately to avoid double turns if state hasn't updated
       setTimeout(() => {
         thinkingRef.current[bot.id] = false;
       }, 2000);
@@ -173,71 +225,49 @@ export function useBotLogic(
     const reactionKey = `react_${bot.id}_${action.id}`;
     thinkingRef.current[reactionKey] = true;
 
-    // Bots take some time to "decide"
     await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 3000));
 
-    // Bots occasionally emote when they are targeted or reacting
-    if (Math.random() > 0.6) {
-      const emotes = ["👁️", "💧", "🤡", "🤫"];
-      sendBotEmote(bot.id, emotes[Math.floor(Math.random() * emotes.length)]);
-    }
-
     try {
-      // Re-fetch action to see if it was already resolved
-      const { data: currentAction } = await supabase.from('game_actions').select('status').eq('id', action.id).single();
-      if (!currentAction || (currentAction.status !== 'pending' && currentAction.status !== 'blocking')) return;
+      const { data: currentAction } = await supabase.from('game_actions').select('status, accepted_by').eq('id', action.id).single();
+      if (!currentAction || (currentAction.status !== 'pending' && currentAction.status !== 'blocking')) {
+        // If the action is pending but hasn't been accepted by the bot yet, we can mark it as accepted to speed up
+        if (currentAction && !currentAction.accepted_by?.includes(bot.id)) {
+           const newAcceptedBy = [...(currentAction.accepted_by || []), bot.id];
+           await supabase.from('game_actions').update({ accepted_by: newAcceptedBy }).eq('id', action.id);
+        }
+        return;
+      }
 
       const difficulty = bot.bot_difficulty || 'moderate';
-      
       let challengeProb = 0.15;
       let blockProb = 0.2;
       if (difficulty === 'easy') { challengeProb = 0.05; blockProb = 0.1; }
       if (difficulty === 'hard') { challengeProb = 0.35; blockProb = 0.4; }
 
-      if (action.status === 'pending') {
-        const isTarget = action.target_id === bot.id;
-        const canBlock = !!BLOCKABLE_ACTIONS[action.action_type];
-        
-        // Higher probability to challenge/block if they are the target
-        const finalChallengeProb = isTarget ? challengeProb * 1.5 : challengeProb;
-        const finalBlockProb = isTarget ? blockProb * 2 : blockProb;
+      const isTarget = action.target_id === bot.id;
+      const canBlock = !!BLOCKABLE_ACTIONS[action.action_type];
+      const finalChallengeProb = isTarget ? challengeProb * 1.5 : challengeProb;
+      const finalBlockProb = isTarget ? blockProb * 2 : blockProb;
 
-          if (Math.random() < finalChallengeProb) {
-            sendBotEmote(bot.id, "😈");
-            await supabase.from('game_actions').update({ 
-              status: 'challenged',
-            challenger_id: bot.id 
-          }).eq('id', action.id);
-          
-          await supabase.from('game_logs').insert([{
-            room_id: room!.id,
-            message: `${bot.name} CONTESTOU ${players.find(p => p.id === action.player_id)?.name}!`
-          }]);
-          } else if (canBlock && Math.random() < finalBlockProb) {
-            sendBotEmote(bot.id, "🤫");
-            await supabase.from('game_actions').update({ 
-              status: 'blocking',
-            blocker_id: bot.id,
-            expires_at: new Date(Date.now() + 12000).toISOString()
-          }).eq('id', action.id);
-          
-          await supabase.from('game_logs').insert([{
-            room_id: room!.id,
-            message: `${bot.name} anunciou BLOQUEIO contra ${players.find(p => p.id === action.player_id)?.name}!`
-          }]);
+      if (action.status === 'pending') {
+        if (Math.random() < finalChallengeProb) {
+          await supabase.from('game_actions').update({ status: 'challenged', challenger_id: bot.id }).eq('id', action.id);
+          await supabase.from('game_logs').insert([{ room_id: room!.id, message: `${bot.name} CONTESTOU!` }]);
+        } else if (canBlock && Math.random() < finalBlockProb) {
+          await supabase.from('game_actions').update({ status: 'blocking', blocker_id: bot.id, expires_at: new Date(Date.now() + 10000).toISOString() }).eq('id', action.id);
+          await supabase.from('game_logs').insert([{ room_id: room!.id, message: `${bot.name} BLOQUEOU!` }]);
+        } else {
+          // Accept the action
+          const newAcceptedBy = [...(currentAction.accepted_by || []), bot.id];
+          await supabase.from('game_actions').update({ accepted_by: newAcceptedBy }).eq('id', action.id);
         }
       } else if (action.status === 'blocking' && action.player_id === bot.id) {
-        // The bot's own action was blocked! They might challenge the block.
         if (Math.random() < challengeProb) {
-          await supabase.from('game_actions').update({ 
-            status: 'block_challenged',
-            challenger_id: bot.id 
-          }).eq('id', action.id);
-          
-          await supabase.from('game_logs').insert([{
-            room_id: room!.id,
-            message: `${bot.name} CONTESTOU o bloqueio!`
-          }]);
+          await supabase.from('game_actions').update({ status: 'block_challenged', challenger_id: bot.id }).eq('id', action.id);
+          await supabase.from('game_logs').insert([{ room_id: room!.id, message: `${bot.name} CONTESTOU o bloqueio!` }]);
+        } else {
+          const newAcceptedBy = [...(currentAction.accepted_by || []), bot.id];
+          await supabase.from('game_actions').update({ accepted_by: newAcceptedBy }).eq('id', action.id);
         }
       }
     } catch (err) {

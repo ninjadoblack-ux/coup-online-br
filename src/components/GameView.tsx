@@ -898,10 +898,6 @@ export const GameView: React.FC<GameViewProps> = ({
                       hasCard={hasCard}
                       isMyTurn={isMyTurn}
                       onClick={() => handleAction(action)}
-                    />
-                  );
-                })}
-              </TooltipProvider>
             </div>
           </div>
         </div>

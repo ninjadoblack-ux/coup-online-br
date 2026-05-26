@@ -41,6 +41,21 @@ export function useGameLogic(
       resolveAction(currentAction, 'block_challenge');
       return;
     }
+    
+    if (currentAction.status === 'executing_final') {
+      resolveAction(currentAction, 'execute');
+      return;
+    }
+
+    if (currentAction.status === 'blocked' || currentAction.status === 'failed') {
+      // Just complete the action
+      supabase.from('game_actions').update({ status: 'completed' }).eq('id', currentAction.id).then(() => {
+        checkEliminations();
+        const nextPlayerId = getNextPlayerId(players, currentAction.player_id);
+        supabase.from('rooms').update({ current_turn_player_id: nextPlayerId }).eq('id', room!.id);
+      });
+      return;
+    }
 
     // If it's a Coup, it doesn't need pending phase, it goes straight to awaiting_reveal
     if (currentAction.action_type === 'Coup' && currentAction.status === 'pending') {

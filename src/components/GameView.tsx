@@ -249,9 +249,9 @@ export const GameView: React.FC<GameViewProps> = ({
       // Move state forward based on next_status
       let nextStatus: any = pendingAction.next_status || 'completed';
       
-      // If we were executing_final, we transition back to something resolveAction picks up
-      if (nextStatus === 'executing_final') {
-        nextStatus = 'pending'; // This will trigger resolveAction in Host
+      // If we were executing_final or other terminal states, use them directly
+      if (nextStatus === 'executing_final' || nextStatus === 'blocked' || nextStatus === 'failed') {
+        // Keep it as is
       }
 
       await supabase.from('game_actions').update({ 

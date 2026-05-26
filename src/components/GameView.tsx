@@ -455,7 +455,7 @@ export const GameView: React.FC<GameViewProps> = ({
       </div>
 
       {/* Opponents Layout */}
-      <div className="flex justify-center gap-3 sm:gap-6 px-4 py-2 overflow-x-auto no-scrollbar">
+      <div className="flex justify-center gap-2 sm:gap-6 px-4 py-4 overflow-x-auto no-scrollbar scroll-smooth">
         {opponents.map(opponent => (
           <OpponentCard 
             key={opponent.id}

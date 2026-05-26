@@ -689,7 +689,7 @@ export const GameView: React.FC<GameViewProps> = ({
               
               <div className="flex flex-col gap-3 sm:gap-4 mt-8 sm:mt-12">
                 {/* Only others can challenge an action, but anyone can challenge a block */}
-                {(pendingAction.status === 'blocking' || pendingAction.player_id !== myPlayer?.id) && (
+                {(pendingAction.status === 'blocking' || (pendingAction.player_id !== myPlayer?.id && ACTION_REQUIRED_CARDS[pendingAction.action_type])) && (
                   <Button 
                     size="lg"
                     className={cn(

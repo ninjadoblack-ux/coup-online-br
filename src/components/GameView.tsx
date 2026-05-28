@@ -9,6 +9,7 @@ import { History as HistoryIcon, Timer, Bot, Info } from "lucide-react";
 import coinGold from "@/assets/coin-gold.png";
 import coinSilver from "@/assets/coin-silver.png";
 import { ACTION_DESCRIPTIONS, ACTION_LABELS, ACTION_REQUIRED_CARDS, CARD_LABELS, BLOCKABLE_ACTIONS, getNextPlayerId } from "@/lib/game-logic";
+import { shakeVariants } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
